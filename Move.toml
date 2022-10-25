@@ -1,0 +1,11 @@
+[package]
+name = 'candymachine'
+version = '1.0.0'
+
+[addresses]
+candymachine = "_"
+Std = "0x1"
+
+[dependencies]
+AptosFramework = { local = "../../../../aptos-core/aptos-move/framework/aptos-framework"}
+AptosToken = { local = "../../../../aptos-core/aptos-move/framework/aptos-token" }
