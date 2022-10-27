@@ -3,9 +3,11 @@ name = 'candymachine'
 version = '1.0.0'
 
 [addresses]
-candymachine = "0xe3ee5a41cb6db6d214f4e802e1eda007342c272c4cd5f09eef02cc300d9874b0"
+candymachine = "_"
 Std = "0x1"
+aptos_std = "0x1"
 
 [dependencies]
 AptosFramework = { local = "../../../../aptos-core/aptos-move/framework/aptos-framework"}
 AptosToken = { local = "../../../../aptos-core/aptos-move/framework/aptos-token" }
+AptosStdlib = { local = "../../../../aptos-core/aptos-move/framework/aptos-stdlib" }
