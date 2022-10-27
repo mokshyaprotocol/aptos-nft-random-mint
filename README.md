@@ -1,4 +1,4 @@
-Mokshya NFT mint smart contract. 
+Candy machine smart contract for Aptos Blockchain.
 
 # Deploy contract
 
