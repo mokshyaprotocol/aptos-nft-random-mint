@@ -15,7 +15,7 @@ module candymachine::candymachine{
     const INVALID_amount: u64 = 1;
     const CANNOT_ZERO: u64 = 2;
     const EINVALID_ROYALTY_NUMERATOR_DENOMINATOR: u64 = 3;
-    const ESALE_NOT_STARTED: u64 = 3;
+    const ESALE_NOT_STARTED: u64 = 4;
     const ESOLD_OUT:u64 = 4;
 
     struct CandyMachine has key {
@@ -42,7 +42,7 @@ module candymachine::candymachine{
             source: address,
             resource_cap: account::SignerCapability
     }
-    public entry fun set_up_candy(
+    public entry fun init_candy(
         account: &signer,
         collection_name: String,
         collection_description: String,
@@ -112,7 +112,6 @@ module candymachine::candymachine{
     public entry fun mint_script(
         receiver: &signer,
         candymachine: address,
-        amount: u64,
     )acquires ResourceInfo, CandyMachine,Whitelist{
         let receiver_addr = signer::address_of(receiver);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
@@ -135,6 +134,17 @@ module candymachine::candymachine{
         string::append(&mut token_name,string::utf8(b" #"));
         string::append(&mut token_name,num_str(candy));
         string::append(&mut baseuri,string::utf8(b".json"));
+        let mint_price = candy_data.public_sale_mint_price;
+        while (i < whitelist_accounts_len){
+            let tmp = *vector::borrow(&candy_data.whitelist,i);
+            let whitelist_data = borrow_global<Whitelist>(tmp);
+            if (vector::contains(&whitelist_data.whitelist,&receiver_addr)){
+                if (now > candy_data.presale_mint_time && now < candy_data.public_sale_mint_time ){
+                    mint_price = candy_data.presale_mint_price
+                };
+            };
+            i=i+1
+        };
         token::create_token_script(
             &resource_signer_from_cap,
             candy_data.collection_name,
@@ -151,22 +161,10 @@ module candymachine::candymachine{
             vector<vector<u8>>[],
             properties
         );
-        let mint_price = candy_data.public_sale_mint_price;
-        while (i < whitelist_accounts_len){
-            let tmp = *vector::borrow(&candy_data.whitelist,i);
-            let whitelist_data = borrow_global<Whitelist>(tmp);
-            if (vector::contains(&whitelist_data.whitelist,&receiver_addr)){
-                if (now > candy_data.presale_mint_time && now < candy_data.public_sale_mint_time ){
-                    mint_price = candy_data.presale_mint_price
-                };
-            };
-            i=i+1
-        };
-        
         let token_data_id = token::create_token_data_id(candymachine,candy_data.collection_name,token_name);
         token::opt_in_direct_transfer(receiver,true);
         coin::transfer<0x1::aptos_coin::AptosCoin>(receiver, resource_data.source, mint_price);
-        token::mint_token_to(&resource_signer_from_cap,receiver_addr,token_data_id,amount);
+        token::mint_token_to(&resource_signer_from_cap,receiver_addr,token_data_id,1);
         candy_data.minted=candy_data.minted+1
     }
     public entry fun pause_mint(
@@ -247,21 +245,6 @@ module candymachine::candymachine{
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
         token::mutate_one_token(&resource_signer_from_cap,token_owner,token_id,keys,values,types);
     }
-
-    // public fun mutate_tokendata_maximum(
-    //     account: &signer, 
-    //     token_data_id: TokenDataId, 
-    //     maximum: u64,
-    //     candymachine: address,
-    // )acquires ResourceInfo,CandyMachine{
-    //     let account_addr = signer::address_of(account);
-    //     let resource_data = borrow_global<ResourceInfo>(candymachine);
-    //     let candy_data = borrow_global_mut<CandyMachine>(candymachine);
-    //     assert!(resource_data.source == account_addr, INVALID_SIGNER);
-    //     let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
-    //     token::mutate_tokendata_maximum(&resource_signer_from_cap,token_data_id,maximum);
-    // }
-
     public fun mutate_tokendata_uri(
         account: &signer,
         token_data_id: TokenDataId,
@@ -274,32 +257,6 @@ module candymachine::candymachine{
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
         token::mutate_tokendata_uri(&resource_signer_from_cap,token_data_id,uri);
     }
-    // public fun mutate_tokendata_royalty(
-    //     account: &signer, 
-    //     token_data_id: TokenDataId, 
-    //     royalty: Royalty,
-    //     candymachine: address
-    // )acquires ResourceInfo,CandyMachine{
-    //     let account_addr = signer::address_of(account);
-    //     let resource_data = borrow_global<ResourceInfo>(candymachine);
-    //     let candy_data = borrow_global_mut<CandyMachine>(candymachine);        
-    //     assert!(resource_data.source == account_addr, INVALID_SIGNER);
-    //     let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
-    //     token::mutate_tokendata_royalty(&resource_signer_from_cap,token_data_id,royalty);  
-    // }
-    // public fun mutate_tokendata_description(
-    //     account: &signer, 
-    //     token_data_id: TokenDataId, 
-    //     description: String,
-    //     candymachine: address
-    // )acquires ResourceInfo,CandyMachine{
-    //     let account_addr = signer::address_of(account);
-    //     let resource_data = borrow_global<ResourceInfo>(candymachine);
-    //     let candy_data = borrow_global_mut<CandyMachine>(candymachine);
-    //     assert!(resource_data.source == account_addr, INVALID_SIGNER);
-    //     let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
-    //     token::mutate_tokendata_description(&resource_signer_from_cap,token_data_id,description);  
-    // }
     public fun mutate_tokendata_property(
         account: &signer,
         token_data_id: TokenDataId,
