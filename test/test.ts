@@ -45,7 +45,7 @@ describe("whitelist", () => {
             "1000",
             "42",
             date-20,
-            date+10,
+            date,
             "1000",
             "2000",
             "10000",
@@ -114,7 +114,7 @@ describe("whitelist", () => {
         console.log("Resume mint: "+transactionRes.hash)
         await client.waitForTransactionWithResult(transactionRes.hash);
       })
-      it("Whitelist Mint", async () => {
+      it("Public Mint", async () => {
         const date = Math.floor(new Date().getTime() / 1000)
         const create_candy_machine = {
           type: "entry_function_payload",

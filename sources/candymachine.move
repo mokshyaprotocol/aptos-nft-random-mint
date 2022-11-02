@@ -15,9 +15,9 @@ module candymachine::candymachine{
     const INVALID_amount: u64 = 1;
     const CANNOT_ZERO: u64 = 2;
     const EINVALID_ROYALTY_NUMERATOR_DENOMINATOR: u64 = 3;
-    const ESALE_NOT_STARTED: u64 = 5;
-    const ESOLD_OUT:u64 = 6;
-    const EPAUSED:u64 = 7;
+    const ESALE_NOT_STARTED: u64 = 4;
+    const ESOLD_OUT:u64 = 5;
+    const EPAUSED:u64 = 6;
 
     struct CandyMachine has key {
         collection_name: String,
@@ -147,7 +147,7 @@ module candymachine::candymachine{
             i=i+1
         };
         if (mint_price == candy_data.public_sale_mint_price){
-            assert!(now < candy_data.public_sale_mint_time, ESALE_NOT_STARTED);
+            assert!(now > candy_data.public_sale_mint_time, ESALE_NOT_STARTED);
         };
         token::create_token_script(
             &resource_signer_from_cap,
