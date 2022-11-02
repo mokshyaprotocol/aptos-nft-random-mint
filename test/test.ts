@@ -30,8 +30,8 @@ function makeid(length) {
 
 describe("whitelist", () => {
     it("Whitelist Mint", async () => {
+        await faucetClient.fundAccount(alice.address(), 1000000000);
         await faucetClient.fundAccount(bob.address(), 1000000000);
-        await faucetClient.fundAccount(notwhitelist.address(), 1000000000);
         const date = Math.floor(new Date().getTime() / 1000)
         const create_candy_machine = {
           type: "entry_function_payload",
