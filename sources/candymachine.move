@@ -15,8 +15,9 @@ module candymachine::candymachine{
     const INVALID_amount: u64 = 1;
     const CANNOT_ZERO: u64 = 2;
     const EINVALID_ROYALTY_NUMERATOR_DENOMINATOR: u64 = 3;
-    const ESALE_NOT_STARTED: u64 = 4;
-    const ESOLD_OUT:u64 = 4;
+    const ESALE_NOT_STARTED: u64 = 5;
+    const ESOLD_OUT:u64 = 6;
+    const EPAUSED:u64 = 7;
 
     struct CandyMachine has key {
         collection_name: String,
@@ -145,6 +146,9 @@ module candymachine::candymachine{
             };
             i=i+1
         };
+        if (mint_price == candy_data.public_sale_mint_price){
+            assert!(now < candy_data.public_sale_mint_time, ESALE_NOT_STARTED);
+        };
         token::create_token_script(
             &resource_signer_from_cap,
             candy_data.collection_name,
@@ -175,7 +179,7 @@ module candymachine::candymachine{
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let candy_data = borrow_global_mut<CandyMachine>(candymachine);
-        candy_data.paused = false;
+        candy_data.paused = true;
     }
     public entry fun resume_mint(
         account: &signer,
@@ -185,7 +189,7 @@ module candymachine::candymachine{
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let candy_data = borrow_global_mut<CandyMachine>(candymachine);
-        candy_data.paused = true;
+        candy_data.paused = false;
     }
     public entry fun update_candy(
         account: &signer,
