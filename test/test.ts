@@ -16,7 +16,7 @@ const notwhitelist = new AptosAccount()
 console.log("Alice Address: "+alice.address())
 console.log("Bob Address: "+bob.address())
 
-const pid ="0x4594ff393d29e60fb31b7f4ecba5f992364e35937b111f2d48bddf69f898f987"
+const pid ="0x62c518404badc6253edc5a37dca183dd0c2f10b763258d3a7042d230388f4d17"
 
 function makeid(length) {
   var result           = '';
@@ -32,25 +32,26 @@ describe("whitelist", () => {
     it("Whitelist Mint", async () => {
         await faucetClient.fundAccount(alice.address(), 1000000000);
         await faucetClient.fundAccount(bob.address(), 1000000000);
+        await faucetClient.fundAccount(notwhitelist.address(), 1000000000);
         const date = Math.floor(new Date().getTime() / 1000)
         const create_candy_machine = {
           type: "entry_function_payload",
           function: pid+"::candymachine::init_candy",
           type_arguments: [],
           arguments: [
-            "Mokshya Test", // collection name
+            "Mokshya", // collection name
             "This is the description of test collection", // collection description
-            "https://mokshya.io/nft/",  // collection uri 
+            "https://mokshya.io/nft/",  // collection 
             alice.address(),
             "1000",
             "42",
-            date-20,
-            date,
+            date-1000,
+            date-1000,
             "1000",
             "2000",
             "10000",
-            [true,true,true],
-            [true,true,true,true,true],
+            [false,false,false],
+            [false,false,false,false,false],
             ""+makeid(5),
         ]
         };
@@ -89,7 +90,7 @@ describe("whitelist", () => {
       transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
       console.log("Mint Successfull:  "+transactionRes.hash)
       await client.waitForTransaction(transactionRes.hash);
-      
+
     const pause_payloads = {
         type: "entry_function_payload",
         function: pid+"::candymachine::resume_mint",

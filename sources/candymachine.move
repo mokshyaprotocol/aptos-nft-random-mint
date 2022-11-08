@@ -3,14 +3,9 @@ module candymachine::candymachine{
     use std::string::{Self, String};
     use std::vector;
     use std::error;
-    use std::bcs;
     use aptos_framework::coin::{Self};
     use aptos_framework::account;
-    use aptos_token::token::{Self,Royalty,TokenDataId,TokenId};
-    use aptos_std::simple_map::{Self, SimpleMap};
-    use aptos_std::any;
-    use aptos_std::from_bcs;
-    use aptos_std::copyable_any;
+    use aptos_token::token::{Self,TokenDataId,TokenId};
     const INVALID_SIGNER: u64 = 0;
     const INVALID_amount: u64 = 1;
     const CANNOT_ZERO: u64 = 2;
@@ -60,7 +55,6 @@ module candymachine::candymachine{
         token_mutate_setting:vector<bool>,
         seeds: vector<u8>
     ){
-        let account_addr = signer::address_of(account);
         let (_resource, resource_cap) = account::create_resource_account(account, seeds);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_cap);
         move_to<ResourceInfo>(&resource_signer_from_cap, ResourceInfo{resource_cap: resource_cap, source: signer::address_of(account)});
@@ -104,8 +98,8 @@ module candymachine::candymachine{
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         let candy_data = borrow_global_mut<CandyMachine>(candymachine);
-        let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
-        let (whitelist_add, whitelist_cap) = account::create_resource_account(account, seeds);
+        assert!(resource_data.source == account_addr, INVALID_SIGNER);
+        let (_whitelist_add, whitelist_cap) = account::create_resource_account(account, seeds);
         let whitelist_signer_from_cap = account::create_signer_with_capability(&whitelist_cap);
         vector::push_back(&mut candy_data.whitelist,signer::address_of(&whitelist_signer_from_cap));
         move_to<Whitelist>(&whitelist_signer_from_cap, Whitelist{whitelist});
@@ -149,18 +143,18 @@ module candymachine::candymachine{
         if (mint_price == candy_data.public_sale_mint_price){
             assert!(now > candy_data.public_sale_mint_time, ESALE_NOT_STARTED);
         };
-        token::create_token_script(
+        let token_mut_config = token::create_token_mutability_config(&candy_data.token_mutate_setting);
+        let token_data = token::create_tokendata(
             &resource_signer_from_cap,
             candy_data.collection_name,
             token_name,
             candy_data.collection_description,
             1,
-            0,
             baseuri,
             candy_data.royalty_payee_address,
             candy_data.royalty_points_denominator,
             candy_data.royalty_points_numerator,
-            candy_data.token_mutate_setting,
+            token_mut_config,
             properties,
             vector<vector<u8>>[],
             properties
@@ -168,7 +162,12 @@ module candymachine::candymachine{
         let token_data_id = token::create_token_data_id(candymachine,candy_data.collection_name,token_name);
         token::opt_in_direct_transfer(receiver,true);
         coin::transfer<0x1::aptos_coin::AptosCoin>(receiver, resource_data.source, mint_price);
-        token::mint_token_to(&resource_signer_from_cap,receiver_addr,token_data_id,1);
+        token::mint_token_to(
+            &resource_signer_from_cap,
+            receiver_addr,
+            token_data_id,
+            1
+            );
         candy_data.minted=candy_data.minted+1
     }
     public entry fun pause_mint(
@@ -241,10 +240,9 @@ module candymachine::candymachine{
         values: vector<vector<u8>>,
         types: vector<String>,
         candymachine: address,
-    )acquires ResourceInfo,CandyMachine{
+    )acquires ResourceInfo{
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
-        let candy_data = borrow_global_mut<CandyMachine>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
         token::mutate_one_token(&resource_signer_from_cap,token_owner,token_id,keys,values,types);
@@ -254,10 +252,10 @@ module candymachine::candymachine{
         token_data_id: TokenDataId,
         uri: String,
         candymachine: address,
-    )acquires ResourceInfo,CandyMachine{
+    )acquires ResourceInfo{
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
-        let candy_data = borrow_global_mut<CandyMachine>(candymachine);
+        assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
         token::mutate_tokendata_uri(&resource_signer_from_cap,token_data_id,uri);
     }
@@ -268,14 +266,14 @@ module candymachine::candymachine{
         values: vector<vector<u8>>,
         types: vector<String>,
         candymachine: address
-    )acquires ResourceInfo,CandyMachine{
+    )acquires ResourceInfo{
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
-        let candy_data = borrow_global_mut<CandyMachine>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
         token::mutate_tokendata_property(&resource_signer_from_cap,token_data_id,keys,values,types);  
     }
+
     fun num_str(num: u64): String{
         let v1 = vector::empty();
         while (num/10 > 0){
@@ -287,4 +285,44 @@ module candymachine::candymachine{
         vector::reverse(&mut v1);
         string::utf8(v1)
     }
+
+    #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1)]
+        public entry fun test_init_candy(
+            creator: &signer,
+            minter: &signer,
+            candymachine: &signer
+        )acquires ResourceInfo,CandyMachine{
+            account::create_account_for_test(signer::address_of(creator));
+            account::create_account_for_test(signer::address_of(minter));
+
+            aptos_framework::timestamp::set_time_has_started_for_testing(candymachine);
+            aptos_framework::timestamp::update_global_time_for_test_secs(100);
+
+            init_candy(
+                creator,
+                string::utf8(b"Collection: Mokshya"),
+                string::utf8(b"Collection: Mokshya"),
+                string::utf8(b"https://mokshya.io"),
+                signer::address_of(creator),
+                100,
+                0,
+                10,
+                10,
+                0,
+                0,
+                1,
+                vector<bool>[false, false, false],
+                vector<bool>[false, false, false, false, false],
+                b"candy"
+                );
+            let whitelist_address= vector<address>[signer::address_of(minter)];
+            let candy_machine = account::create_resource_address(&signer::address_of(creator), b"candy");
+            create_whitelist(
+                creator,
+                candy_machine,
+                whitelist_address,
+                b"whitelist",
+            );
+        }
+
 }
