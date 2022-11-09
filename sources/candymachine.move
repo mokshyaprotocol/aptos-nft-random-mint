@@ -11,6 +11,8 @@ module candymachine::candymachine{
     use aptos_framework::account;
     use aptos_framework::timestamp;
     use aptos_token::token::{Self,TokenDataId,TokenId};
+
+
     const INVALID_SIGNER: u64 = 0;
     const INVALID_amount: u64 = 1;
     const CANNOT_ZERO: u64 = 2;
@@ -96,7 +98,6 @@ module candymachine::candymachine{
             collection_mutate_setting
         );
     }
-
     public entry fun create_whitelist(
         account: &signer,
         candymachine: address,
@@ -132,8 +133,6 @@ module candymachine::candymachine{
 
         // let (mint_position,candies) = mint_available_number(random_index,candy_data.candies);
         // candy_data.candies = candies;
-
-
         let required_position=0; // the number of unset 
         let bucket =0; // number of buckets
         let pos=0; // the mint number 
@@ -147,16 +146,23 @@ module candymachine::candymachine{
             {
             required_position=required_position+1;
             };
-            pos=pos+1;
             if (required_position == random_index)
             {
                 bit_vector::set(&mut bitvector,i);
                 vector::push_back(&mut new, bitvector);
                 break
             };
+            pos=pos+1;
             i= i + 1;
         };
+        vector::push_back(&mut new, bitvector);
         bucket=bucket+1
+        };
+        while (bucket < vector::length(&candy_data.candies))
+        {
+            let bitvector=*vector::borrow_mut(&mut candy_data.candies, bucket);
+            vector::push_back(&mut new, bitvector);
+            bucket=bucket+1;
         };
 
         let mint_position = pos;
@@ -284,7 +290,8 @@ module candymachine::candymachine{
         values: vector<vector<u8>>,
         types: vector<String>,
         candymachine: address,
-    )acquires ResourceInfo{
+    )acquires ResourceInfo
+    {
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
@@ -296,7 +303,8 @@ module candymachine::candymachine{
         token_data_id: TokenDataId,
         uri: String,
         candymachine: address,
-    )acquires ResourceInfo{
+    )acquires ResourceInfo
+    {
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
@@ -310,7 +318,8 @@ module candymachine::candymachine{
         values: vector<vector<u8>>,
         types: vector<String>,
         candymachine: address
-    )acquires ResourceInfo{
+    )acquires ResourceInfo
+    {
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
@@ -318,7 +327,8 @@ module candymachine::candymachine{
         token::mutate_tokendata_property(&resource_signer_from_cap,token_data_id,keys,values,types);  
     }
 
-    fun num_str(num: u64): String{
+    fun num_str(num: u64): String
+    {
         let v1 = vector::empty();
         while (num/10 > 0){
             let rem = num%10;
@@ -330,8 +340,8 @@ module candymachine::candymachine{
         string::utf8(v1)
     }
 
-    fun create_bit_mask(nfts: u64): vector<BitVector>{
-
+    fun create_bit_mask(nfts: u64): vector<BitVector>
+    {
         let full_buckets = nfts/1024; 
         let remaining =nfts-full_buckets*1024; 
         if (nfts < 1024)
@@ -351,7 +361,8 @@ module candymachine::candymachine{
     }
     //takes the random number between 1 to total supply as index
     // returns the index among the available
-    fun mint_available_number(index:u64,data:vector<BitVector>):(u64,vector<BitVector>){
+    fun mint_available_number(index:u64,data:vector<BitVector>):(u64,vector<BitVector>)
+    {
         let required_position=0; // the number of unset 
         let bucket =0; // number of buckets
         let pos=0; // the mint number 
@@ -396,7 +407,11 @@ module candymachine::candymachine{
         };
         assert!(remaining>0,999);
 
-        let random = from_bcs::to_u64(data) % remaining;
+        let random = from_bcs::to_u64(data) % remaining + 1;
+        if (random == 0 )
+        {
+            random = 1;
+        };
         random
 
     }
