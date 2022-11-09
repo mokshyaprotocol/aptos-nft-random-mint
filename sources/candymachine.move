@@ -1,11 +1,18 @@
 module candymachine::candymachine{
     use std::signer;
+    use std::bcs;
+    use std::hash;
+    use aptos_std::from_bcs;
     use std::string::{Self, String};
     use std::vector;
     use std::error;
+    use std::bit_vector::{Self,BitVector};
     use aptos_framework::coin::{Self};
     use aptos_framework::account;
+    use aptos_framework::timestamp;
     use aptos_token::token::{Self,TokenDataId,TokenId};
+
+
     const INVALID_SIGNER: u64 = 0;
     const INVALID_amount: u64 = 1;
     const CANNOT_ZERO: u64 = 2;
@@ -29,6 +36,7 @@ module candymachine::candymachine{
         total_supply: u64,
         minted: u64,
         token_mutate_setting:vector<bool>,
+        candies:vector<BitVector>,
         whitelist: vector<address>,
     }
     struct Whitelist has key {
@@ -62,6 +70,7 @@ module candymachine::candymachine{
         assert!(royalty_points_denominator > 0, error::invalid_argument(EINVALID_ROYALTY_NUMERATOR_DENOMINATOR));
         assert!(royalty_points_numerator <= royalty_points_denominator, error::invalid_argument(EINVALID_ROYALTY_NUMERATOR_DENOMINATOR));
         let whitelist = vector::empty<address>();
+        let candies_data = create_bit_mask(total_supply);
         move_to<CandyMachine>(&resource_signer_from_cap, CandyMachine{
             collection_name,
             collection_description,
@@ -76,6 +85,7 @@ module candymachine::candymachine{
             total_supply,
             minted:0,
             paused:false,
+            candies:candies_data,
             token_mutate_setting,
             whitelist
         });
@@ -88,7 +98,6 @@ module candymachine::candymachine{
             collection_mutate_setting
         );
     }
-
     public entry fun create_whitelist(
         account: &signer,
         candymachine: address,
@@ -118,16 +127,57 @@ module candymachine::candymachine{
         assert!(now > candy_data.presale_mint_time, ESALE_NOT_STARTED);
         let whitelist_accounts_len =  vector::length(&candy_data.whitelist);
         let i = 0;
-        
+
+        let remaining = candy_data.total_supply - candy_data.minted;
+        let random_index = pseudo_random(receiver_addr,remaining);
+
+        // let (mint_position,candies) = mint_available_number(random_index,candy_data.candies);
+        // candy_data.candies = candies;
+        let required_position=0; // the number of unset 
+        let bucket =0; // number of buckets
+        let pos=0; // the mint number 
+        let new =  vector::empty();
+        while (required_position < random_index)
+        {
+        let bitvector=*vector::borrow_mut(&mut candy_data.candies, bucket);
+        let i =0;
+        while (i < bit_vector::length(&bitvector)) {
+            if (!bit_vector::is_index_set(&bitvector, i))
+            {
+            required_position=required_position+1;
+            };
+            if (required_position == random_index)
+            {
+                bit_vector::set(&mut bitvector,i);
+                vector::push_back(&mut new, bitvector);
+                break
+            };
+            pos=pos+1;
+            i= i + 1;
+        };
+        vector::push_back(&mut new, bitvector);
+        bucket=bucket+1
+        };
+        while (bucket < vector::length(&candy_data.candies))
+        {
+            let bitvector=*vector::borrow_mut(&mut candy_data.candies, bucket);
+            vector::push_back(&mut new, bitvector);
+            bucket=bucket+1;
+        };
+
+        let mint_position = pos;
+
+        candy_data.candies = new;
+
+
         let baseuri = candy_data.baseuri;
-        let candy =candy_data.minted;
 
         let properties = vector::empty<String>();
-        string::append(&mut baseuri,num_str(candy));
+        string::append(&mut baseuri,num_str(mint_position));
         
         let token_name = candy_data.collection_name;
         string::append(&mut token_name,string::utf8(b" #"));
-        string::append(&mut token_name,num_str(candy));
+        string::append(&mut token_name,num_str(mint_position));
         string::append(&mut baseuri,string::utf8(b".json"));
         let mint_price = candy_data.public_sale_mint_price;
         while (i < whitelist_accounts_len){
@@ -144,7 +194,7 @@ module candymachine::candymachine{
             assert!(now > candy_data.public_sale_mint_time, ESALE_NOT_STARTED);
         };
         let token_mut_config = token::create_token_mutability_config(&candy_data.token_mutate_setting);
-        let token_data = token::create_tokendata(
+        token::create_tokendata(
             &resource_signer_from_cap,
             candy_data.collection_name,
             token_name,
@@ -240,7 +290,8 @@ module candymachine::candymachine{
         values: vector<vector<u8>>,
         types: vector<String>,
         candymachine: address,
-    )acquires ResourceInfo{
+    )acquires ResourceInfo
+    {
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
@@ -252,7 +303,8 @@ module candymachine::candymachine{
         token_data_id: TokenDataId,
         uri: String,
         candymachine: address,
-    )acquires ResourceInfo{
+    )acquires ResourceInfo
+    {
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
@@ -266,7 +318,8 @@ module candymachine::candymachine{
         values: vector<vector<u8>>,
         types: vector<String>,
         candymachine: address
-    )acquires ResourceInfo{
+    )acquires ResourceInfo
+    {
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
@@ -274,7 +327,8 @@ module candymachine::candymachine{
         token::mutate_tokendata_property(&resource_signer_from_cap,token_data_id,keys,values,types);  
     }
 
-    fun num_str(num: u64): String{
+    fun num_str(num: u64): String
+    {
         let v1 = vector::empty();
         while (num/10 > 0){
             let rem = num%10;
@@ -284,6 +338,82 @@ module candymachine::candymachine{
         vector::push_back(&mut v1, (num+48 as u8));
         vector::reverse(&mut v1);
         string::utf8(v1)
+    }
+
+    fun create_bit_mask(nfts: u64): vector<BitVector>
+    {
+        let full_buckets = nfts/1024; 
+        let remaining =nfts-full_buckets*1024; 
+        if (nfts < 1024)
+        {
+            full_buckets=0;
+            remaining= nfts;
+        };
+        let v1 = vector::empty();
+        while (full_buckets>0)
+        {
+            let new = bit_vector::new(1023); 
+            vector::push_back(&mut v1, new);
+            full_buckets=full_buckets-1;
+        };
+        vector::push_back(&mut v1,bit_vector::new(remaining));
+        v1
+    }
+    //takes the random number between 1 to total supply as index
+    // returns the index among the available
+    fun mint_available_number(index:u64,data:vector<BitVector>):(u64,vector<BitVector>)
+    {
+        let required_position=0; // the number of unset 
+        let bucket =0; // number of buckets
+        let pos=0; // the mint number 
+        while (required_position < index)
+        {
+        let bitvector=*vector::borrow_mut(&mut data, bucket);
+        let i =0;
+        while (i < bit_vector::length(&bitvector)) {
+            if (!bit_vector::is_index_set(&bitvector, i))
+            {
+            required_position=required_position+1;
+            };
+            pos=pos+1;
+            if (required_position == index)
+            {
+                bit_vector::set(&mut bitvector,i);
+                break
+            };
+            i= i + 1;
+        };
+        bucket=bucket+1
+        };
+        (pos,
+        data)
+    }
+    fun pseudo_random(add:address,remaining:u64):u64
+    {
+        let x = bcs::to_bytes<address>(&add);
+        let y = bcs::to_bytes<u64>(&remaining);
+        let z = bcs::to_bytes<u64>(&timestamp::now_seconds());
+        vector::append(&mut x,y);
+        vector::append(&mut x,z);
+        let tmp = hash::sha2_256(x);
+
+        let data = vector<u8>[];
+        let i =24;
+        while (i < 32)
+        {
+            let x =vector::borrow(&tmp,i);
+            vector::append(&mut data,vector<u8>[*x]);
+            i= i+1;
+        };
+        assert!(remaining>0,999);
+
+        let random = from_bcs::to_u64(data) % remaining + 1;
+        if (random == 0 )
+        {
+            random = 1;
+        };
+        random
+
     }
 
     #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1)]
