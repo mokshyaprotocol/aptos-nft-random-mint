@@ -16,7 +16,7 @@ const notwhitelist = new AptosAccount()
 console.log("Alice Address: "+alice.address())
 console.log("Bob Address: "+bob.address())
 
-const pid ="0x62c518404badc6253edc5a37dca183dd0c2f10b763258d3a7042d230388f4d17"
+const pid ="0x40dd8067ef51dfd605b7204cfe72102c4db096a7690e034e683c175213a80e92"
 
 function makeid(length) {
   var result           = '';
@@ -49,7 +49,7 @@ describe("whitelist", () => {
             date-1000,
             "1000",
             "2000",
-            "10000",
+            "10",
             [false,false,false],
             [false,false,false,false,false],
             ""+makeid(5),
@@ -76,20 +76,22 @@ describe("whitelist", () => {
         bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
         transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
         console.log("Whitelist created: "+transactionRes.hash)
-
-        const create_mint_script1 = {
-          type: "entry_function_payload",
-          function: pid+"::candymachine::mint_script",
-          type_arguments: [],
-          arguments: [
-            getresourceAccount['changes'][2]['address']
-          ],
-        };
-      txnRequest = await client.generateTransaction(bob.address(), create_mint_script1);
-      bcsTxn = AptosClient.generateBCSTransaction(bob, txnRequest);
-      transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
-      console.log("Mint Successfull:  "+transactionRes.hash)
-      await client.waitForTransaction(transactionRes.hash);
+        for (let mint=0;mint<10;mint++){
+          const create_mint_script1 = {
+            type: "entry_function_payload",
+            function: pid+"::candymachine::mint_script",
+            type_arguments: [],
+            arguments: [
+              getresourceAccount['changes'][2]['address']
+            ],
+          };
+        txnRequest = await client.generateTransaction(bob.address(), create_mint_script1);
+        bcsTxn = AptosClient.generateBCSTransaction(bob, txnRequest);
+        transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
+        console.log("Mint Successfull:  "+transactionRes.hash)
+        await client.waitForTransaction(transactionRes.hash);
+        }
+        
 
     const pause_payloads = {
         type: "entry_function_payload",
