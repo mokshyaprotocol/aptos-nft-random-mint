@@ -1,0 +1,22 @@
+version: '3.1'
+
+services:
+  mokshya-staging:
+    container_name: mokshya-staging
+    hostname: mokshya-staging
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=development
+        - IMG=14
+        - LOCATION=mokshya-staging
+    restart: always
+    user: root:root
+    env_file:
+      - ./.env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - COMPOSE_PROJECT_NAME=mokshya-staging
+    ports:
+      - ${PORT}:${PORT}

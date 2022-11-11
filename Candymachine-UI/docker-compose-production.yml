@@ -1,0 +1,22 @@
+version: '3.1'
+
+services:
+  mokshya-production:
+    container_name: mokshya-production
+    hostname: mokshya-production
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=development
+        - IMG=14
+        - LOCATION=mokshya-production
+    restart: always
+    user: root:root
+    env_file:
+      - ./.env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - COMPOSE_PROJECT_NAME=mokshya-production
+    ports:
+      - ${PORT}:${PORT}
