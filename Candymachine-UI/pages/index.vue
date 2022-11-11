@@ -4,7 +4,7 @@
         <v-container style="margin-top:18%">
             <v-row justify="center">
                 <v-col cols="12" lg="6" md="6" align="center">
-                    <v-card class="outer-box mt-5">
+                    <v-card class="outer-box">
                         <div class="main-box pa-5" style="position: relative">
                             <small v-if="live" style="position: absolute; top: 0; left: 0">
                                 <v-row no-gutters>
@@ -39,11 +39,13 @@
                             <!-- end general public -->
                         </div>
                     </v-card>
-                    <ReusableButtonConnect />
+                    <v-row no-gutters justify="center" class="py-3">
+                            <ReusableButtonConnect />
+                    </v-row>
 
                     <v-row>
                         <v-col>
-                            <ReusableButtonMint class="mt-5" />
+                            <ReusableButtonMint />
                         </v-col>
                     </v-row>
                 </v-col>
