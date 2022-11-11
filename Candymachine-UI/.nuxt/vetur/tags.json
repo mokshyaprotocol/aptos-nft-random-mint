@@ -1,0 +1,17 @@
+{
+  "ReusableProgress": {
+    "description": "Auto imported from components/reusable/progress.vue"
+  },
+  "ReusableTimer": {
+    "description": "Auto imported from components/reusable/timer.vue"
+  },
+  "WalletChoose": {
+    "description": "Auto imported from components/wallet/choose.vue"
+  },
+  "ReusableButtonConnect": {
+    "description": "Auto imported from components/reusable/button/connect.vue"
+  },
+  "ReusableButtonMint": {
+    "description": "Auto imported from components/reusable/button/mint.vue"
+  }
+}
