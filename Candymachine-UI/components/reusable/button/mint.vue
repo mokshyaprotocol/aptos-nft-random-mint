@@ -36,6 +36,9 @@ export default {
         },
         whitelisted() {
             return this.$store.state.mint.whitelisted
+        },
+        whitelist(){
+            return this.$store.state.wallet.whitelist
         }
     },
     mounted() {
@@ -76,7 +79,9 @@ export default {
             }
         },
         async mint() {
+
             if (this.walletAddr && this.walletType) {
+                this.minting = true;
                 let blncRequired = 0;
                 let blnc = 0;
                 let repeat = 0;
@@ -87,14 +92,13 @@ export default {
                 }
                 repeat = 0;
                 if (this.walletAddr) {
-                    if (this.candyMachine.whitelist.includes(this.walletAddr)) {
+                    if (this.whitelist.includes(this.walletAddr)) {
                         blncRequired = process.env.WHITELIST_MINT_PRICE;
                     } else {
                         blncRequired = process.env.PUBLIC_MINT_PRICE;
                     }
                 }
                 try {
-                    this.minting = true;
                     const create_mint_script = {
                         type: "entry_function_payload",
                         function: process.env.CANDY_MACHINE_ID + "::candymachine::mint_script",
