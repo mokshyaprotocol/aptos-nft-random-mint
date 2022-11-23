@@ -2,8 +2,8 @@
   {
     "name": "index",
     "path": "/",
-    "component": "/Users/evilboyajay/Downloads/Development/aptos-library/candy-machine/Candymachine-UI/pages/index.vue",
+    "component": "/Users/evilboyajay/Downloads/Development/aptos-library/candy-machine/packages/Candymachine-UI/pages/index.vue",
     "chunkName": "pages/index",
-    "_name": "_5f3da7b9"
+    "_name": "_0f4dd47a"
   }
 ]

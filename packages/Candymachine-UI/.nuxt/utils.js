@@ -193,14 +193,14 @@ export async function setContext (app, context) {
   if (!app.context) {
     app.context = {
       isStatic: process.static,
-      isDev: false,
+      isDev: true,
       isHMR: false,
       app,
       store: app.store,
       payload: context.payload,
       error: context.error,
       base: app.router.options.base,
-      env: {"WHITELIST_MINT_DATE":"1668143197","WHITELIST_MINT_PRICE":"0.1","PUBLIC_MINT_DATE":"1668143197","PUBLIC_MINT_PRICE":"0.1","PORT":"3000","NETWORK":"Devnet","CANDY_MACHINE_ID":"0x7134042079eb2e356b0e254cfbc943de6ccc3bb15ee4dcc01c64d1274409709c","RESOURCE_ACCOUNT":"0xa10affb30c8b88b1c23fa9f400830c7ab3e85717f78fe84ca7e91fa54e2fa1d2"}
+      env: {"WHITELIST_MINT_DATE":"1668143197","WHITELIST_MINT_PRICE":"0.1","PUBLIC_MINT_DATE":"1668143197","PUBLIC_MINT_PRICE":"0.1","PORT":"3000","NETWORK":"Testnet","CANDY_MACHINE_ID":"0x589db8bafed425239e1671313cabc182d23d2f952c1a512a0af81eae0085e293","RESOURCE_ACCOUNT":"0xa10affb30c8b88b1c23fa9f400830c7ab3e85717f78fe84ca7e91fa54e2fa1d2"}
     }
     // Only set once
 
@@ -279,7 +279,7 @@ export async function setContext (app, context) {
   app.context.next = context.next
   app.context._redirected = false
   app.context._errored = false
-  app.context.isHMR = false
+  app.context.isHMR = Boolean(context.isHMR)
   app.context.params = app.context.route.params || {}
   app.context.query = app.context.route.query || {}
 }
@@ -297,6 +297,9 @@ export function middlewareSeries (promises, appContext) {
 export function promisify (fn, context) {
   let promise
   if (fn.length === 2) {
+      console.warn('Callback-based asyncData, fetch or middleware calls are deprecated. ' +
+        'Please switch to promises or async/await syntax')
+
     // fn(context, callback)
     promise = new Promise((resolve) => {
       fn(context, function (err, data) {

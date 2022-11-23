@@ -1,8 +1,8 @@
-export const ReusableProgress = () => import('../../components/reusable/progress.vue' /* webpackChunkName: "components/reusable-progress" */).then(c => wrapFunctional(c.default || c))
-export const ReusableTimer = () => import('../../components/reusable/timer.vue' /* webpackChunkName: "components/reusable-timer" */).then(c => wrapFunctional(c.default || c))
-export const WalletChoose = () => import('../../components/wallet/choose.vue' /* webpackChunkName: "components/wallet-choose" */).then(c => wrapFunctional(c.default || c))
-export const ReusableButtonConnect = () => import('../../components/reusable/button/connect.vue' /* webpackChunkName: "components/reusable-button-connect" */).then(c => wrapFunctional(c.default || c))
-export const ReusableButtonMint = () => import('../../components/reusable/button/mint.vue' /* webpackChunkName: "components/reusable-button-mint" */).then(c => wrapFunctional(c.default || c))
+export { default as ReusableProgress } from '../../components/reusable/progress.vue'
+export { default as ReusableTimer } from '../../components/reusable/timer.vue'
+export { default as WalletChoose } from '../../components/wallet/choose.vue'
+export { default as ReusableButtonConnect } from '../../components/reusable/button/connect.vue'
+export { default as ReusableButtonMint } from '../../components/reusable/button/mint.vue'
 
 // nuxt/nuxt.js#8607
 function wrapFunctional(options) {

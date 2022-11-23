@@ -26,6 +26,10 @@ async function serverPrefetch() {
 
   // Add to ssrContext for window.__NUXT__.fetch
 
+  if (this.$ssrContext.nuxt.fetch[this._fetchKey] !== undefined) {
+    console.warn(`Duplicate fetch key detected (${this._fetchKey}). This may lead to unexpected results.`)
+  }
+
   this.$ssrContext.nuxt.fetch[this._fetchKey] =
     this.$fetchState.error ? { _error: this.$fetchState.error } : purifyData(this._data)
 }
