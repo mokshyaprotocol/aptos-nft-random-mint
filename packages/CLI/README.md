@@ -1,7 +1,13 @@
-# Pizza CLI
+# MokshyaCLI
 
-Example TypeScript CLI with Node.js
+Typescript CLI to create candy machine and add whitelist users to the candy machine.
+## Create candy 
 
-## Credits
+ts-node packages/CLI/src/index.ts --create_candy 
 
-[Pizza CLI](https://github.com/tj/commander.js/blob/master/examples/pizza)
+## Create whitelist 
+
+ts-node packages/CLI/src/index.ts --create_whitelist
+
+
+Read more in our  [docs](https://docs.mokshya.io)
