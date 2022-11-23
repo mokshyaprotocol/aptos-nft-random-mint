@@ -15,9 +15,8 @@
     "pretty": true
   },
   "include": [
-    "packages/CLI/*.ts",
-    "*.ts",
-    "test"
+    "src",
+    "*.ts"
   ],
   "paths": {
     "@aptos/*": "../..",

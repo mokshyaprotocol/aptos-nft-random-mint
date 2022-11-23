@@ -1,0 +1,21 @@
+{
+    "Network":"Devnet",
+    "creator_private_key":"0xab081e9b8b996dae2c22a998bd93283d82b9823b35a43bb2c2b45bca63205e19",
+    "collection_name": "NFT Collection Name",
+    "collection_description": "NFT Collection Description",
+    "baseuri": "https://mokshya.io/images/",
+    "royalty_payee_address": "",
+    "royalty_points_denominator": "1000",
+    "royalty_points_numerator": "40",
+    "presale_mint_time": "1668394236",
+    "public_sale_mint_time": "1668394336",
+    "presale_mint_price": "1000",
+    "public_sale_mint_price": "2000",
+    "total_supply": "1000",
+    "mutable":"true",
+    "whitelist":[
+    "0x4a11ff56bbeea529664cceaf36052150718fe22aaa3bce43957febe7222295f6",
+    "0x1f57ab7c321b6e2e1544a882f85a9d8d32ce4ad173fbbaf61c2b6d6e864173e7"
+    ],
+    "resource_account":""
+}

@@ -1,6 +1,6 @@
 import { AptosClient, AptosAccount, FaucetClient} from "aptos";
 
-const NODE_URL = "https://fullnode.devnet.aptoslabs.com";
+const NODE_URL = "https://fullnode.testnet.aptoslabs.com";
 const FAUCET_URL = "https://faucet.devnet.aptoslabs.com";
 
 const client = new AptosClient(NODE_URL);
@@ -16,7 +16,7 @@ const notwhitelist = new AptosAccount()
 console.log("Alice Address: "+alice.address())
 console.log("Bob Address: "+bob.address())
 
-const pid ="0x7134042079eb2e356b0e254cfbc943de6ccc3bb15ee4dcc01c64d1274409709c"
+const pid ="0x40dd8067ef51dfd605b7204cfe72102c4db096a7690e034e683c175213a80e92"
 
 function makeid(length) {
   var result           = '';
@@ -33,6 +33,9 @@ describe("whitelist", () => {
         await faucetClient.fundAccount(alice.address(), 1000000000);
         await faucetClient.fundAccount(bob.address(), 1000000000);
         await faucetClient.fundAccount(notwhitelist.address(), 1000000000);
+        const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+        // await delay(200000) 
         const date = Math.floor(new Date().getTime() / 1000)
         const create_candy_machine = {
           type: "entry_function_payload",

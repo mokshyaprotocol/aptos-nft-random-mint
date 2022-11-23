@@ -1,0 +1,21 @@
+{
+  "entry": "server.js",
+  "files": {
+    "components/reusable-button-connect.js": "components/reusable-button-connect.js",
+    "components/reusable-button-mint.js": "components/reusable-button-mint.js",
+    "components/reusable-progress.js": "components/reusable-progress.js",
+    "components/reusable-timer.js": "components/reusable-timer.js",
+    "components/wallet-choose.js": "components/wallet-choose.js",
+    "pages/index.js": "pages/index.js",
+    "server.js": "server.js"
+  },
+  "maps": {
+    "components/reusable-button-connect.js": "components/reusable-button-connect.js.map",
+    "components/reusable-button-mint.js": "components/reusable-button-mint.js.map",
+    "components/reusable-progress.js": "components/reusable-progress.js.map",
+    "components/reusable-timer.js": "components/reusable-timer.js.map",
+    "components/wallet-choose.js": "components/wallet-choose.js.map",
+    "pages/index.js": "pages/index.js.map",
+    "server.js": "server.js.map"
+  }
+}

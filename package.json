@@ -4,7 +4,8 @@
   "description": "This repository is in development phase.",
   "main": "test/test.ts",
   "scripts": {
-    "test": "ts-mocha test/test.ts -t 100000"
+    "test": "ts-mocha test/test.ts -t 100000",
+    "create_candy": "ts-node src/index.ts create_candy"
   },
   "type": "module",
   "devDependencies": {
@@ -15,6 +16,9 @@
   },
   "dependencies": {
     "aptos": "^1.3.16",
-    "random-seed": "^0.3.0"
+    "commander": "^9.4.1",
+    "fs": "^0.0.1-security",
+    "random-seed": "^0.3.0",
+    "tweetnacl": "^1.0.3"
   }
 }
