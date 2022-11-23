@@ -2,7 +2,7 @@ export async function create_whitelist(alice,fileStream,client,makeid,AptosClien
     for (let i=0;i<fileStream['whitelist'].length;i+=1000){
         const create_whitelist_payloads = {
             type: "entry_function_payload",
-            function: "0x40dd8067ef51dfd605b7204cfe72102c4db096a7690e034e683c175213a80e92::candymachine::create_whitelist",
+            function: "0x589db8bafed425239e1671313cabc182d23d2f952c1a512a0af81eae0085e293::candymachine::create_whitelist",
             type_arguments: [],
             arguments: [fileStream['resource_account'],fileStream['whitelist'].slice(i,i+1000),""+makeid(5)],
         };

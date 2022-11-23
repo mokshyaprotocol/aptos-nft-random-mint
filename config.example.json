@@ -1,5 +1,5 @@
 {
-    "Network":"Devnet",
+    "NODE_URL":"https://fullnode.testnet.aptoslabs.com",
     "creator_private_key":"",
     "collection_name": "NFT Collection Name",
     "collection_description": "NFT Collection Description",

@@ -8,7 +8,7 @@ export async function create_candy(alice,fileStream,client,makeid,AptosClient) {
     }
     const create_candy_machine = {
       type: "entry_function_payload",
-      function: "0x40dd8067ef51dfd605b7204cfe72102c4db096a7690e034e683c175213a80e92::candymachine::init_candy",
+      function: "0x589db8bafed425239e1671313cabc182d23d2f952c1a512a0af81eae0085e293::candymachine::init_candy",
       type_arguments: [],
       arguments: [
         fileStream['collection_name'],
