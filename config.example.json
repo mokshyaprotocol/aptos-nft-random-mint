@@ -1,6 +1,6 @@
 {
     "Network":"Devnet",
-    "creator_private_key":"0xab081e9b8b996dae2c22a998bd93283d82b9823b35a43bb2c2b45bca63205e19",
+    "creator_private_key":"",
     "collection_name": "NFT Collection Name",
     "collection_description": "NFT Collection Description",
     "baseuri": "https://mokshya.io/images/",
