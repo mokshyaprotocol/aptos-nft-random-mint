@@ -1,0 +1,31 @@
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-size: 100%;
+}
+.timer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+}
+.timer section {
+    width: 43px;
+    height: 55px;
+    margin: 10px 5px;
+    border: 2px solid #95bfe5;
+    color: black;
+    font-weight: bold;
+    background: linear-gradient(180deg,#81b7e9  0%, #27537a 100%);
+}
+.timer section small {
+    font-size: x-small;
+    margin-top: -10px;
+}
+span {
+    padding: 10px;
+}
