@@ -4,3 +4,4 @@ node_modules/
 config.json
 packages/CLI/node_modules
 packages/CLI/config.json
+.DS_Store
