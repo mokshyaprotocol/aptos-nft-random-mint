@@ -9,7 +9,7 @@
     "module": "commonjs",
     "noImplicitAny": true,
     "noImplicitAny": false,
-    "outDir": "./dist",
+    "outDir": "lib",
     "sourceMap": true,
     "target": "es2020",
     "pretty": true

@@ -2,9 +2,23 @@
   "name": "mokshya",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "./lib/index.js",
   "scripts": {
-    "create_candy": "ts-node src/index.ts create_candy"
+    "create_candy": "ts-node src/index.ts create_candy",
+    "audit": "lerna run audit --stream",
+    "audit:depcheck": "lerna run audit:depcheck --stream",
+    "audit:npm-check-updates": "npx npm-check-updates --errorLevel 1",
+    "build": "tsc -p .",
+    "create": "npm run build",
+    "local": "sudo npm uninstall -g && sudo npm install -g && mokshya",
+    "npm:format": "npx prettier-package-json --write package.json",
+    "npm:upgrade": "npx npm-check-updates -iu",
+    "refresh": "rm -rf ./node_modules ./package-lock.json && npm install",
+    "start": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "test": "sudo npm i -g && mokshya"
+  },
+  "bin": {
+    "mokshya": "./lib/index.js"
   },
   "keywords": [],
   "author": "",

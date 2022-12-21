@@ -5,6 +5,7 @@ module candymachine::candymachine{
     use aptos_std::from_bcs;
     use std::string::{Self, String};
     use std::vector;
+    use aptos_framework::aptos_coin::AptosCoin;
     use std::error;
     use std::bit_vector::{Self,BitVector};
     use aptos_framework::coin::{Self};
@@ -20,6 +21,8 @@ module candymachine::candymachine{
     const ESALE_NOT_STARTED: u64 = 4;
     const ESOLD_OUT:u64 = 5;
     const EPAUSED:u64 = 6;
+    const INVALID_MUTABLE_CONFIG:u64 = 7;
+    const EINVALID_MINT_TIME:u64 = 8;
 
     struct CandyMachine has key {
         collection_name: String,
@@ -65,9 +68,11 @@ module candymachine::candymachine{
     ){
         let (_resource, resource_cap) = account::create_resource_account(account, seeds);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_cap);
+        let now = aptos_framework::timestamp::now_seconds();
         move_to<ResourceInfo>(&resource_signer_from_cap, ResourceInfo{resource_cap: resource_cap, source: signer::address_of(account)});
-        
+        assert!(vector::length(&collection_mutate_setting) == 3 && vector::length(&token_mutate_setting) == 5, error::invalid_argument(INVALID_MUTABLE_CONFIG));
         assert!(royalty_points_denominator > 0, error::invalid_argument(EINVALID_ROYALTY_NUMERATOR_DENOMINATOR));
+        assert!(public_sale_mint_time >=  now && presale_mint_time >= now, error::invalid_argument(EINVALID_MINT_TIME));
         assert!(royalty_points_numerator <= royalty_points_denominator, error::invalid_argument(EINVALID_ROYALTY_NUMERATOR_DENOMINATOR));
         let whitelist = vector::empty<address>();
         let candies_data = create_bit_mask(total_supply);
@@ -164,14 +169,9 @@ module candymachine::candymachine{
             vector::push_back(&mut new, bitvector);
             bucket=bucket+1;
         };
-
         let mint_position = pos;
-
         candy_data.candies = new;
-
-
         let baseuri = candy_data.baseuri;
-
         let properties = vector::empty<String>();
         string::append(&mut baseuri,num_str(mint_position));
         
@@ -211,7 +211,7 @@ module candymachine::candymachine{
         );
         let token_data_id = token::create_token_data_id(candymachine,candy_data.collection_name,token_name);
         token::opt_in_direct_transfer(receiver,true);
-        coin::transfer<0x1::aptos_coin::AptosCoin>(receiver, resource_data.source, mint_price);
+        coin::transfer<AptosCoin>(receiver, resource_data.source, mint_price);
         token::mint_token_to(
             &resource_signer_from_cap,
             receiver_addr,
@@ -416,18 +416,24 @@ module candymachine::candymachine{
 
     }
 
-    #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1)]
-        public entry fun test_init_candy(
+    #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework)]
+    public entry fun test_init_candy(
             creator: &signer,
+            aptos_framework: &signer,
             minter: &signer,
             candymachine: &signer
-        )acquires ResourceInfo,CandyMachine{
+        )acquires ResourceInfo,CandyMachine,Whitelist{
             account::create_account_for_test(signer::address_of(creator));
             account::create_account_for_test(signer::address_of(minter));
-
+            let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(aptos_framework);
+            coin::register<0x1::aptos_coin::AptosCoin>(minter);
+            coin::register<0x1::aptos_coin::AptosCoin>(creator);
+            coin::deposit(signer::address_of(minter), coin::mint(100, &mint_cap));
+            coin::deposit(signer::address_of(creator), coin::mint(100, &mint_cap));
+            coin::destroy_burn_cap(burn_cap);
+            coin::destroy_mint_cap(mint_cap);
             aptos_framework::timestamp::set_time_has_started_for_testing(candymachine);
             aptos_framework::timestamp::update_global_time_for_test_secs(100);
-
             init_candy(
                 creator,
                 string::utf8(b"Collection: Mokshya"),
@@ -436,15 +442,16 @@ module candymachine::candymachine{
                 signer::address_of(creator),
                 100,
                 0,
-                10,
-                10,
-                0,
+                100,
+                100,
+                100,
                 0,
                 1,
                 vector<bool>[false, false, false],
                 vector<bool>[false, false, false, false, false],
                 b"candy"
                 );
+            aptos_framework::timestamp::update_global_time_for_test_secs(102);
             let whitelist_address= vector<address>[signer::address_of(minter)];
             let candy_machine = account::create_resource_address(&signer::address_of(creator), b"candy");
             create_whitelist(
@@ -452,6 +459,10 @@ module candymachine::candymachine{
                 candy_machine,
                 whitelist_address,
                 b"whitelist",
+            );
+            mint_script(
+                minter,
+                candy_machine
             );
         }
 
