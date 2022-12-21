@@ -1,6 +1,6 @@
 {
   "name": "candy-machine",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "description": "This repository is in development phase.",
   "main": "test/test.ts",
   "scripts": {
