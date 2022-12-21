@@ -34,8 +34,8 @@ export async function create_candy(alice,fileStream,client,makeid,AptosClient) {
     if (check_txn['success']){
         fileStream['resource_account']= check_txn['changes'][2]['address']
         console.log('Candy Machine Created - Transaction Hash: ' + transactionRes.hash)
-        // var json = JSON.stringify(fileStream);
-        fs.writeFileSync('config.json', JSON.stringify(fileStream));
+        let argIndex = process.argv.indexOf('--config')
+        fs.writeFileSync(process.argv[argIndex+1], JSON.stringify(fileStream));
     }
     return transactionRes.hash
   }

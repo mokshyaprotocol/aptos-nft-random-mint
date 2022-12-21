@@ -38,17 +38,16 @@ commander_1.program
     .option('-w, --config', 'config')
     .option('-p, --pause_mint', 'pause_mint')
     .parse(process.argv);
-const fileStream = JSON.parse(fs.readFileSync('config.json', "utf8"));
+let argIndex = process.argv.indexOf('--config');
+const fileStream = JSON.parse(fs.readFileSync(process.argv[argIndex + 1], "utf8"));
 const options = commander_1.program.opts();
 const client = new aptos_1.AptosClient(fileStream['NODE_URL']);
 // const fileStream = JSON.parse(fs.readFileSync('config.json',"utf8"));
 if (options.create_candy) {
-    let argIndex = process.argv.indexOf('--config');
     const alice = new aptos_1.AptosAccount(aptos_1.HexString.ensure(fileStream['creator_private_key']).toUint8Array(), undefined);
     (0, create_candy_1.create_candy)(alice, fileStream, client, seedGenerate_1.makeid, aptos_1.AptosClient);
 }
 if (options.create_whitelist) {
-    let argIndex = process.argv.indexOf('--config');
     const alice = new aptos_1.AptosAccount(aptos_1.HexString.ensure(fileStream['creator_private_key']).toUint8Array(), undefined);
     const client = new aptos_1.AptosClient(fileStream['NODE_URL']);
     (0, create_whitelist_1.create_whitelist)(alice, fileStream, client, seedGenerate_1.makeid, aptos_1.AptosClient);
