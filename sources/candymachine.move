@@ -42,6 +42,9 @@ module candymachine::candymachine{
         candies:vector<BitVector>,
         whitelist: vector<address>,
     }
+    struct CandyMintingEvent has drop, store {
+        token_id: TokenId,
+    }
     struct Whitelist has key {
         whitelist: vector<address>,
     }
@@ -92,7 +95,7 @@ module candymachine::candymachine{
             paused:false,
             candies:candies_data,
             token_mutate_setting,
-            whitelist
+            whitelist,
         });
         token::create_collection(
             &resource_signer_from_cap, 
@@ -252,6 +255,7 @@ module candymachine::candymachine{
     )acquires ResourceInfo,CandyMachine{
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
+        let now = aptos_framework::timestamp::now_seconds();
         assert!(public_sale_mint_time >=  now && presale_mint_time >= now, error::invalid_argument(EINVALID_MINT_TIME));
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let candy_data = borrow_global_mut<CandyMachine>(candymachine);
