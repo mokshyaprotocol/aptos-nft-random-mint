@@ -252,6 +252,7 @@ module candymachine::candymachine{
     )acquires ResourceInfo,CandyMachine{
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
+        assert!(public_sale_mint_time >=  now && presale_mint_time >= now, error::invalid_argument(EINVALID_MINT_TIME));
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let candy_data = borrow_global_mut<CandyMachine>(candymachine);
         assert!(royalty_points_denominator == 0, EINVALID_ROYALTY_NUMERATOR_DENOMINATOR);
@@ -359,35 +360,7 @@ module candymachine::candymachine{
         vector::push_back(&mut v1,bit_vector::new(remaining));
         v1
     }
-    //takes the random number between 1 to total supply as index
-    // returns the index among the available
-    fun mint_available_number(index:u64,data:vector<BitVector>):(u64,vector<BitVector>)
-    {
-        let required_position=0; // the number of unset 
-        let bucket =0; // number of buckets
-        let pos=0; // the mint number 
-        while (required_position < index)
-        {
-        let bitvector=*vector::borrow_mut(&mut data, bucket);
-        let i =0;
-        while (i < bit_vector::length(&bitvector)) {
-            if (!bit_vector::is_index_set(&bitvector, i))
-            {
-            required_position=required_position+1;
-            };
-            pos=pos+1;
-            if (required_position == index)
-            {
-                bit_vector::set(&mut bitvector,i);
-                break
-            };
-            i= i + 1;
-        };
-        bucket=bucket+1
-        };
-        (pos,
-        data)
-    }
+
     fun pseudo_random(add:address,remaining:u64):u64
     {
         let x = bcs::to_bytes<address>(&add);
