@@ -26,5 +26,5 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm 
+    - run: npm install
     - run: ts-mocha test/test.ts -t 100000
