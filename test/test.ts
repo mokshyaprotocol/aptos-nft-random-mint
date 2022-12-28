@@ -1,4 +1,4 @@
-import { AptosClient, AptosAccount, FaucetClient} from "aptos";
+import { HexString,AptosClient, AptosAccount, FaucetClient} from "aptos";
 
 const NODE_URL = "https://fullnode.testnet.aptoslabs.com";
 const FAUCET_URL = "https://faucet.devnet.aptoslabs.com";
@@ -8,15 +8,16 @@ const faucetClient = new FaucetClient(NODE_URL, FAUCET_URL);
 var enc = new TextEncoder(); // always utf-8
 
 
-const alice = new AptosAccount();
-const bob = new AptosAccount();
+const alice = new AptosAccount(HexString.ensure("0x1111111111111111111111111111111111111111111111111111111111111111").toUint8Array());
+;
+const bob = new AptosAccount(HexString.ensure("0x2111111111111111111111111111111111111111111111111111111111111111").toUint8Array());
 const notwhitelist = new AptosAccount()
 
 
 console.log("Alice Address: "+alice.address())
 console.log("Bob Address: "+bob.address())
 
-const pid ="0x40dd8067ef51dfd605b7204cfe72102c4db096a7690e034e683c175213a80e92"
+const pid ="0x589db8bafed425239e1671313cabc182d23d2f952c1a512a0af81eae0085e293"
 
 function makeid(length) {
   var result           = '';
@@ -27,12 +28,11 @@ function makeid(length) {
   }
   return result;
 }
-
+const delay = (delayInms) => {
+  return new Promise(resolve => setTimeout(resolve, delayInms));
+}
 describe("whitelist", () => {
     it("Whitelist Mint", async () => {
-        await faucetClient.fundAccount(alice.address(), 1000000000);
-        await faucetClient.fundAccount(bob.address(), 1000000000);
-        await faucetClient.fundAccount(notwhitelist.address(), 1000000000);
         const date = Math.floor(new Date().getTime() / 1000)
         const create_candy_machine = {
           type: "entry_function_payload",
@@ -45,8 +45,8 @@ describe("whitelist", () => {
             alice.address(),
             "1000",
             "42",
-            date-1000,
-            date-1000,
+            date+10,
+            date+10,
             "1000",
             "2000",
             "100",
@@ -76,6 +76,8 @@ describe("whitelist", () => {
         bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
         transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
         console.log("Whitelist created: "+transactionRes.hash)
+
+        await delay(15000)
         for (let mint=0;mint<5;mint++){
           const create_mint_script1 = {
             type: "entry_function_payload",
@@ -130,8 +132,8 @@ describe("whitelist", () => {
             alice.address(),
             "1000",
             "42",
-            date-20,
             date+10,
+            date+20,
             "1000",
             "2000",
             "10000",
@@ -147,6 +149,8 @@ describe("whitelist", () => {
 
         let getresourceAccount = await client.waitForTransactionWithResult(transactionRes.hash);
         console.log("Resource Address: "+getresourceAccount['changes'][2]['address'])
+
+        await delay(15000)
 
         const create_mint_script1 = {
           type: "entry_function_payload",
