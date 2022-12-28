@@ -8,8 +8,10 @@ const faucetClient = new FaucetClient(NODE_URL, FAUCET_URL);
 var enc = new TextEncoder(); // always utf-8
 
 
+// This private key is only for test purpose do not use this in mainnet
 const alice = new AptosAccount(HexString.ensure("0x1111111111111111111111111111111111111111111111111111111111111111").toUint8Array());
 ;
+// This private key is only for test purpose do not use this in mainnet
 const bob = new AptosAccount(HexString.ensure("0x2111111111111111111111111111111111111111111111111111111111111111").toUint8Array());
 const notwhitelist = new AptosAccount()
 
