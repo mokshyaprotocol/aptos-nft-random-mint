@@ -33,7 +33,6 @@ describe("whitelist", () => {
         await faucetClient.fundAccount(alice.address(), 1000000000);
         await faucetClient.fundAccount(bob.address(), 1000000000);
         await faucetClient.fundAccount(notwhitelist.address(), 1000000000);
-        const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
         const date = Math.floor(new Date().getTime() / 1000)
         const create_candy_machine = {
           type: "entry_function_payload",
