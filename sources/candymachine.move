@@ -393,25 +393,26 @@ module candymachine::candymachine{
 
     }
 
-    #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework)]
-    public entry fun test_init_candy(
-            creator: &signer,
-            aptos_framework: &signer,
-            minter: &signer,
-            candymachine: &signer
-        )acquires ResourceInfo,CandyMachine,Whitelist{
-            account::create_account_for_test(signer::address_of(creator));
-            account::create_account_for_test(signer::address_of(minter));
-            let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(aptos_framework);
-            coin::register<0x1::aptos_coin::AptosCoin>(minter);
-            coin::register<0x1::aptos_coin::AptosCoin>(creator);
-            coin::deposit(signer::address_of(minter), coin::mint(100, &mint_cap));
-            coin::deposit(signer::address_of(creator), coin::mint(100, &mint_cap));
-            coin::destroy_burn_cap(burn_cap);
-            coin::destroy_mint_cap(mint_cap);
-            aptos_framework::timestamp::set_time_has_started_for_testing(candymachine);
-            aptos_framework::timestamp::update_global_time_for_test_secs(100);
-            init_candy(
+    #[test_only]
+    public entry fun set_up_test(
+        creator: &signer,
+        aptos_framework: &signer,
+        minter: &signer,
+        candymachine: &signer
+    )
+    {
+        account::create_account_for_test(signer::address_of(creator));
+        account::create_account_for_test(signer::address_of(minter));
+        let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(aptos_framework);
+        coin::register<0x1::aptos_coin::AptosCoin>(minter);
+        coin::register<0x1::aptos_coin::AptosCoin>(creator);
+        coin::deposit(signer::address_of(minter), coin::mint(100, &mint_cap));
+        coin::deposit(signer::address_of(creator), coin::mint(100, &mint_cap));
+        coin::destroy_burn_cap(burn_cap);
+        coin::destroy_mint_cap(mint_cap);
+        aptos_framework::timestamp::set_time_has_started_for_testing(candymachine);
+        aptos_framework::timestamp::update_global_time_for_test_secs(100);
+        init_candy(
                 creator,
                 string::utf8(b"Collection: Mokshya"),
                 string::utf8(b"Collection: Mokshya"),
@@ -423,11 +424,21 @@ module candymachine::candymachine{
                 100,
                 100,
                 0,
-                1,
+                100,
                 vector<bool>[false, false, false],
                 vector<bool>[false, false, false, false, false],
                 b"candy"
-                );
+            );
+    }
+    #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework)]
+    public entry fun test_candy_machine(
+            creator: &signer,
+            aptos_framework: &signer,
+            minter: &signer,
+            candymachine: &signer
+        )acquires ResourceInfo,CandyMachine,Whitelist
+        {
+            set_up_test(creator,aptos_framework,minter,candymachine);
             aptos_framework::timestamp::update_global_time_for_test_secs(102);
             let whitelist_address= vector<address>[signer::address_of(minter)];
             let candy_machine = account::create_resource_address(&signer::address_of(creator), b"candy");
@@ -441,6 +452,97 @@ module candymachine::candymachine{
                 minter,
                 candy_machine
             );
+    }
+    #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework)]
+    public entry fun test_mint_all_tokens(
+            creator: &signer,
+            aptos_framework: &signer,
+            minter: &signer,
+            candymachine: &signer
+        )acquires ResourceInfo,CandyMachine,Whitelist
+        {
+            set_up_test(creator,aptos_framework,minter,candymachine);
+            aptos_framework::timestamp::update_global_time_for_test_secs(102);
+            let candy_machine = account::create_resource_address(&signer::address_of(creator), b"candy");
+            let i = 0;
+            while (i < 100) {
+                mint_script(
+                minter,
+                candy_machine
+                );
+                i = i +1;
+            }
         }
-
+        #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework)]
+        #[expected_failure(abort_code = 0x10003, location = Self)]
+        public entry fun test_royalty_overflow(
+            creator: &signer,
+            aptos_framework: &signer,
+            minter: &signer,
+            candymachine: &signer
+        )
+        {
+            set_up_test(creator,aptos_framework,minter,candymachine);
+            init_candy(
+                creator,
+                string::utf8(b"Collection: Mokshya"),
+                string::utf8(b"Collection: Mokshya"),
+                string::utf8(b"https://mokshya.io"),
+                signer::address_of(creator),
+                10,
+                100,
+                100,
+                100,
+                100,
+                0,
+                100,
+                vector<bool>[false, false, false],
+                vector<bool>[false, false, false, false, false],
+                b"royalty"
+            );
+        }
+        #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework)]
+        #[expected_failure(abort_code = 0x10008, location = Self)]
+        public entry fun test_timestamp(
+            creator: &signer,
+            aptos_framework: &signer,
+            minter: &signer,
+            candymachine: &signer
+        )
+        {
+            set_up_test(creator,aptos_framework,minter,candymachine);
+            init_candy(
+                creator,
+                string::utf8(b"Collection: Mokshya"),
+                string::utf8(b"Collection: Mokshya"),
+                string::utf8(b"https://mokshya.io"),
+                signer::address_of(creator),
+                10,
+                100,
+                1,
+                1,
+                100,
+                0,
+                100,
+                vector<bool>[false, false, false],
+                vector<bool>[false, false, false, false, false],
+                b"royalty"
+            );
+        }
+         #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework)]
+        #[expected_failure(abort_code = 0x4, location = Self)]
+        public entry fun test_mint_before_launch(
+            creator: &signer,
+            aptos_framework: &signer,
+            minter: &signer,
+            candymachine: &signer
+        )acquires ResourceInfo, CandyMachine,Whitelist
+        {
+            set_up_test(creator,aptos_framework,minter,candymachine);
+            let candy_machine = account::create_resource_address(&signer::address_of(creator), b"candy");
+            mint_script(
+                minter,
+                candy_machine
+            );
+        }
 }
