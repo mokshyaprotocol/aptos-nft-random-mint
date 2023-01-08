@@ -80,21 +80,19 @@ describe("whitelist", () => {
         console.log("Whitelist created: "+transactionRes.hash)
 
         await delay(15000)
-        for (let mint=0;mint<5;mint++){
-          const create_mint_script1 = {
-            type: "entry_function_payload",
-            function: pid+"::candymachine::mint_script",
-            type_arguments: [],
-            arguments: [
-              getresourceAccount['changes'][2]['address']
-            ],
-          };
-        txnRequest = await client.generateTransaction(bob.address(), create_mint_script1);
-        bcsTxn = AptosClient.generateBCSTransaction(bob, txnRequest);
-        transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
-        console.log("Mint Successfull:  "+transactionRes.hash)
-        client.waitForTransaction(transactionRes.hash);
-        }
+        const create_mint_script1 = {
+          type: "entry_function_payload",
+          function: pid+"::candymachine::mint_script",
+          type_arguments: [],
+          arguments: [
+            getresourceAccount['changes'][2]['address']
+          ],
+        };
+      txnRequest = await client.generateTransaction(bob.address(), create_mint_script1);
+      bcsTxn = AptosClient.generateBCSTransaction(bob, txnRequest);
+      transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
+      console.log("Mint Successfull:  "+transactionRes.hash)
+      client.waitForTransaction(transactionRes.hash);
         
 
     const pause_payloads = {
