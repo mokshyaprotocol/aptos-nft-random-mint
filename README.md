@@ -1,8 +1,8 @@
 Candy machine smart contract for Aptos Blockchain. The smart contract is available in mainnet and testnet. For detail information please go to our [docs](https://docs.mokshya.io)
 
-Mainnet contract : 0x589db8bafed425239e1671313cabc182d23d2f952c1a512a0af81eae0085e293
+Mainnet contract : 0xb9c7b4d7da344bbf03a3d4b144c2020dec1049427b96d0411024153485621185
 
-Testnet contract : 0x589db8bafed425239e1671313cabc182d23d2f952c1a512a0af81eae0085e293
+Testnet contract : 0xb9c7b4d7da344bbf03a3d4b144c2020dec1049427b96d0411024153485621185
 
 # Quick Installation 
 

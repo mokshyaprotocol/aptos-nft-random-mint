@@ -19,7 +19,7 @@ const notwhitelist = new AptosAccount()
 console.log("Alice Address: "+alice.address())
 console.log("Bob Address: "+bob.address())
 
-const pid ="0x589db8bafed425239e1671313cabc182d23d2f952c1a512a0af81eae0085e293"
+const pid ="0xb9c7b4d7da344bbf03a3d4b144c2020dec1049427b96d0411024153485621185"
 
 function makeid(length) {
   var result           = '';
