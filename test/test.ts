@@ -71,7 +71,7 @@ describe("whitelist", () => {
           type: "entry_function_payload",
           function: pid+"::candymachine::create_whitelist",
           type_arguments: [],
-          arguments: [getresourceAccount['changes'][2]['address'],addresses,""+makeid(5)],
+          arguments: [getresourceAccount['changes'][2]['address'],addresses,1,""+makeid(5)],
         };
         console.log("Resource Address: "+getresourceAccount['changes'][2]['address'])
         txnRequest = await client.generateTransaction(alice.address(), create_whitelist_payloads);
@@ -167,7 +167,7 @@ describe("whitelist", () => {
       transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
       console.log("Mint Successfull:  "+transactionRes.hash)
       await client.waitForTransaction(transactionRes.hash);
-      
+      await delay(5000)
       const pause_payloads = {
         type: "entry_function_payload",
         function: pid+"::candymachine::resume_mint",
@@ -179,7 +179,7 @@ describe("whitelist", () => {
       transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
       console.log("Pause mint: "+transactionRes.hash)
       await client.waitForTransactionWithResult(transactionRes.hash);
-
+      await delay(5000)
       const resume_payloads = {
         type: "entry_function_payload",
         function: pid+"::candymachine::resume_mint",

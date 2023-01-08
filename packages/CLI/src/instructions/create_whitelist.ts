@@ -4,7 +4,7 @@ export async function create_whitelist(alice,fileStream,client,makeid,AptosClien
             type: "entry_function_payload",
             function: "0x589db8bafed425239e1671313cabc182d23d2f952c1a512a0af81eae0085e293::candymachine::create_whitelist",
             type_arguments: [],
-            arguments: [fileStream['resource_account'],fileStream['whitelist'].slice(i,i+1000),""+makeid(5)],
+            arguments: [fileStream['resource_account'],fileStream['whitelist'].slice(i,i+1000),1,""+makeid(5)],
         };
         let txnRequest = await client.generateTransaction(alice.address(), create_whitelist_payloads);
         let bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
