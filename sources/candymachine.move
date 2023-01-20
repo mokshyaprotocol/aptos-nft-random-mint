@@ -399,13 +399,6 @@ module candymachine::candymachine{
         random
 
     }
-    // This is used for staking verification in staking contract
-    public fun check_collection_name_and_creator_address(resource_addr: address,collection_name:String,creator:address): bool acquires ResourceInfo,CandyMachine {
-        let resource_data = borrow_global<ResourceInfo>(resource_addr);
-        let candy_data = borrow_global<CandyMachine>(resource_addr);
-        assert!(candy_data.collection_name==collection_name && resource_data.source == creator, STAKING_VALIDATION);
-        true
-    }
     #[test_only]
     public fun set_up_test(
         creator: &signer,
