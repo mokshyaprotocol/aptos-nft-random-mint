@@ -13,7 +13,6 @@ module candymachine::candymachine{
     use aptos_framework::timestamp;
     use aptos_token::token::{Self,TokenDataId,TokenId};
 
-
     const INVALID_SIGNER: u64 = 0;
     const INVALID_amount: u64 = 1;
     const CANNOT_ZERO: u64 = 2;
@@ -399,7 +398,10 @@ module candymachine::candymachine{
         random
 
     }
-
+    // This is the address of resource account owner
+    public fun get_collection_creator_address(addr: address): address acquires ResourceInfo {
+        borrow_global<ResourceInfo>(addr).source
+    }
     #[test_only]
     public fun set_up_test(
         creator: &signer,
