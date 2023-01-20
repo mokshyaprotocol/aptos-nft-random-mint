@@ -23,6 +23,7 @@ module candymachine::candymachine{
     const INVALID_MUTABLE_CONFIG:u64 = 7;
     const EINVALID_MINT_TIME:u64 = 8;
     const MINT_LIMIT_EXCEED: u64 = 9;
+    const STAKING_VALIDATION: u64 = 9;
 
     struct CandyMachine has key {
         collection_name: String,
@@ -398,9 +399,12 @@ module candymachine::candymachine{
         random
 
     }
-    // This is the address of resource account owner
-    public fun get_collection_creator_address(addr: address): address acquires ResourceInfo {
-        borrow_global<ResourceInfo>(addr).source
+    // This is used for staking verification in staking contract
+    public fun get_collection_name_and_creator_address(resource_addr: address,collection_name:String,creator:address): bool acquires ResourceInfo,CandyMachine {
+        let resource_data = borrow_global<ResourceInfo>(resource_addr);
+        let candy_data = borrow_global<CandyMachine>(resource_addr);
+        assert!(candy_data.collection_name==collection_name && resource_data.source == creator, STAKING_VALIDATION);
+        true
     }
     #[test_only]
     public fun set_up_test(
