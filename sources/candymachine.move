@@ -23,7 +23,6 @@ module candymachine::candymachine{
     const INVALID_MUTABLE_CONFIG:u64 = 7;
     const EINVALID_MINT_TIME:u64 = 8;
     const MINT_LIMIT_EXCEED: u64 = 9;
-    const STAKING_VALIDATION: u64 = 9;
 
     struct CandyMachine has key {
         collection_name: String,
