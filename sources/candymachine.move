@@ -5,6 +5,7 @@ module candymachine::candymachine{
     use aptos_std::from_bcs;
     use std::string::{Self, String};
     use std::vector;
+    use std::option::{Self, Option};
     use aptos_framework::aptos_coin::AptosCoin;
     use std::error;
     use std::bit_vector::{Self,BitVector};
@@ -12,6 +13,7 @@ module candymachine::candymachine{
     use aptos_framework::account;
     use aptos_framework::timestamp;
     use aptos_token::token::{Self,TokenDataId,TokenId};
+    use candymachine::bucket_table::{Self, BucketTable};
 
     const INVALID_SIGNER: u64 = 0;
     const INVALID_amount: u64 = 1;
@@ -40,11 +42,11 @@ module candymachine::candymachine{
         minted: u64,
         token_mutate_setting:vector<bool>,
         candies:vector<BitVector>,
-        whitelist: vector<address>,
+        public_mint_limit: Option<u64>
     }
     struct Whitelist has key {
-        whitelist: vector<address>,
-        mint_limit: u64
+        whitelist: BucketTable<address, u64>,
+        candy_machine: address
     }
     struct ResourceInfo has key {
             source: address,
@@ -75,7 +77,6 @@ module candymachine::candymachine{
         assert!(royalty_points_denominator > 0, error::invalid_argument(EINVALID_ROYALTY_NUMERATOR_DENOMINATOR));
         assert!(public_sale_mint_time >=  now && presale_mint_time >= now, error::invalid_argument(EINVALID_MINT_TIME));
         assert!(royalty_points_numerator <= royalty_points_denominator, error::invalid_argument(EINVALID_ROYALTY_NUMERATOR_DENOMINATOR));
-        let whitelist = vector::empty<address>();
         let candies_data = create_bit_mask(total_supply);
         move_to<CandyMachine>(&resource_signer_from_cap, CandyMachine{
             collection_name,
@@ -93,7 +94,7 @@ module candymachine::candymachine{
             paused:false,
             candies:candies_data,
             token_mutate_setting,
-            whitelist,
+            public_mint_limit: option::none<u64>(),
         });
         token::create_collection(
             &resource_signer_from_cap, 
@@ -107,18 +108,27 @@ module candymachine::candymachine{
     public entry fun create_whitelist(
         account: &signer,
         candymachine: address,
-        whitelist: vector<address>,
+        whitelist_addresses: vector<address>,
         mint_limit: u64,
-        seeds:vector<u8>
-    )acquires ResourceInfo,CandyMachine{
+    )acquires ResourceInfo,Whitelist{
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
-        let candy_data = borrow_global_mut<CandyMachine>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
-        let (_whitelist_add, whitelist_cap) = account::create_resource_account(account, seeds);
-        let whitelist_signer_from_cap = account::create_signer_with_capability(&whitelist_cap);
-        vector::push_back(&mut candy_data.whitelist,signer::address_of(&whitelist_signer_from_cap));
-        move_to<Whitelist>(&whitelist_signer_from_cap, Whitelist{whitelist,mint_limit});
+        if(!exists<Whitelist>(candymachine)){
+            let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
+            move_to(&resource_signer_from_cap, Whitelist {
+                // Can use a different size of bucket table depending on how big we expect the whitelist to be.
+                whitelist: bucket_table::new<address, u64>(4),
+                candy_machine: candymachine
+            })
+        };
+        let whitelist_addr = borrow_global_mut<Whitelist>(candymachine);
+        let i = 0;
+        while (i < vector::length(&whitelist_addresses)) {
+            let addr = *vector::borrow(&whitelist_addresses, i);
+            bucket_table::add(&mut whitelist_addr.whitelist, addr, mint_limit);
+            i = i + 1;
+        };
     }
     public entry fun mint_script(
         receiver: &signer,
@@ -132,14 +142,9 @@ module candymachine::candymachine{
         assert!(candy_data.minted != candy_data.total_supply, ESOLD_OUT);
         let now = aptos_framework::timestamp::now_seconds();
         assert!(now > candy_data.presale_mint_time, ESALE_NOT_STARTED);
-        let whitelist_accounts_len =  vector::length(&candy_data.whitelist);
-        let i = 0;
-
         let remaining = candy_data.total_supply - candy_data.minted;
         let random_index = pseudo_random(receiver_addr,remaining);
 
-        // let (mint_position,candies) = mint_available_number(random_index,candy_data.candies);
-        // candy_data.candies = candies;
         let required_position=0; // the number of unset 
         let bucket =0; // number of buckets
         let pos=0; // the mint number 
@@ -182,22 +187,17 @@ module candymachine::candymachine{
         string::append(&mut token_name,num_str(mint_position));
         string::append(&mut baseuri,string::utf8(b".json"));
         let mint_price = candy_data.public_sale_mint_price;
-        // Looping in all the whitelist data accounts
-        while (i < whitelist_accounts_len){
-            // borrowing whitelist accounts of index i 
-            let whitelist_addr = *vector::borrow(&candy_data.whitelist,i);
-            // borrowing all the whitelisted address stored in whitelist_addr
-            let whitelist_data = borrow_global_mut<Whitelist>(whitelist_addr);
-            // Checking if the minter is whitelisted or not
-            if (vector::contains(&whitelist_data.whitelist,&receiver_addr)){
+        if(exists<Whitelist>(candymachine)){
+            let whitelist_data = borrow_global_mut<Whitelist>(candymachine);
+             if (bucket_table::contains(&whitelist_data.whitelist, &receiver_addr)){
                 // checking minter limit
-                assert!(whitelist_data.mint_limit > 0, MINT_LIMIT_EXCEED);
+                let remaining_mint_limit = bucket_table::borrow_mut(&mut whitelist_data.whitelist, receiver_addr);
+                assert!(*remaining_mint_limit != 0, MINT_LIMIT_EXCEED);
                 if (now > candy_data.presale_mint_time && now < candy_data.public_sale_mint_time ){
                     mint_price = candy_data.presale_mint_price;
-                    whitelist_data.mint_limit = whitelist_data.mint_limit - 1
+                    *remaining_mint_limit = *remaining_mint_limit - 1;
                 }
-            };
-            i=i+1
+            }
         };
         if (mint_price == candy_data.public_sale_mint_price){
             assert!(now > candy_data.public_sale_mint_time, ESALE_NOT_STARTED);
@@ -412,8 +412,8 @@ module candymachine::candymachine{
         let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(aptos_framework);
         coin::register<0x1::aptos_coin::AptosCoin>(minter);
         coin::register<0x1::aptos_coin::AptosCoin>(creator);
-        coin::deposit(signer::address_of(minter), coin::mint(1000, &mint_cap));
-        coin::deposit(signer::address_of(creator), coin::mint(100, &mint_cap));
+        coin::deposit(signer::address_of(minter), coin::mint(10000, &mint_cap));
+        coin::deposit(signer::address_of(creator), coin::mint(1000, &mint_cap));
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);
         aptos_framework::timestamp::set_time_has_started_for_testing(candymachine);
@@ -454,7 +454,6 @@ module candymachine::candymachine{
                 candy_machine,
                 whitelist_address,
                 mint_limit,
-                b"whitelist",
             );
             mint_script(
                 minter,
@@ -553,25 +552,28 @@ module candymachine::candymachine{
             candy_machine
         );
     }
-    #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework)]
+    #[test(creator = @0xb0c, minter = @0xc0c, minter2 = @0xc0d,candymachine=@0x1,aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 0x9, location = Self)]
     public entry fun test_mint_limit(
         creator: &signer,
         aptos_framework: &signer,
         minter: &signer,
+        minter2: &signer,
         candymachine: &signer
     )acquires ResourceInfo, CandyMachine,Whitelist
     {
         set_up_test(creator,aptos_framework,minter,candymachine,80);
-        let whitelist_address= vector<address>[signer::address_of(minter)];
         let candy_machine = account::create_resource_address(&signer::address_of(creator), b"candy");
         let mint_limit= 2;
+        account::create_account_for_test(signer::address_of(minter2));
+        coin::register<0x1::aptos_coin::AptosCoin>(minter2);
+        coin::transfer<AptosCoin>(minter, signer::address_of(minter2), 300);
+        let whitelist_addresses= vector<address>[signer::address_of(minter),signer::address_of(minter2)];
         create_whitelist(
             creator,
             candy_machine,
-            whitelist_address,
+            whitelist_addresses,
             mint_limit,
-            b"whitelist",
         );
         aptos_framework::timestamp::update_global_time_for_test_secs(90);
         mint_script(
@@ -583,8 +585,24 @@ module candymachine::candymachine{
             candy_machine
         );
         mint_script(
-            minter,
+            minter2,
             candy_machine
         );
+        mint_script(
+            minter2,
+            candy_machine
+        );
+        mint_script(
+            minter2,
+            candy_machine
+        );
+        // mint_script(
+        //     minter,
+        //     candy_machine
+        // );
+        // mint_script(
+        //     minter,
+        //     candy_machine
+        // );
     }
 }
