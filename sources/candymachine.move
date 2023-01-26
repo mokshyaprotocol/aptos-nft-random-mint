@@ -5,7 +5,6 @@ module candymachine::candymachine{
     use aptos_std::from_bcs;
     use std::string::{Self, String};
     use std::vector;
-    use std::option::{Self, Option};
     use aptos_framework::aptos_coin::AptosCoin;
     use std::error;
     use std::bit_vector::{Self,BitVector};
@@ -42,7 +41,7 @@ module candymachine::candymachine{
         minted: u64,
         token_mutate_setting:vector<bool>,
         candies:vector<BitVector>,
-        public_mint_limit: Option<u64>
+        public_mint_limit: u64
     }
     struct Whitelist has key {
         whitelist: BucketTable<address, u64>,
@@ -70,7 +69,7 @@ module candymachine::candymachine{
         total_supply:u64,
         collection_mutate_setting:vector<bool>,
         token_mutate_setting:vector<bool>,
-        public_mint_limit: Option<u64>,
+        public_mint_limit: u64,
         seeds: vector<u8>
     ){
         let (_resource, resource_cap) = account::create_resource_account(account, seeds);
@@ -122,7 +121,7 @@ module candymachine::candymachine{
             let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
             move_to(&resource_signer_from_cap, Whitelist {
                 // Can use a different size of bucket table depending on how big we expect the whitelist to be.
-                whitelist: bucket_table::new<address, u64>(4),
+                whitelist: bucket_table::new<address, u64>(5),
                 candy_machine: candymachine
             })
         };
@@ -211,10 +210,10 @@ module candymachine::candymachine{
                 minters: bucket_table::new<address, u64>(4),
                 })
             };
-            if(option::is_some<u64>(&candy_data.public_mint_limit)){
+            if(candy_data.public_mint_limit != 0){
                 let public_minters= borrow_global_mut<PublicMinters>(candymachine);
                 if (!bucket_table::contains(&public_minters.minters, &receiver_addr)) {
-                        bucket_table::add(&mut public_minters.minters, receiver_addr, option::destroy_some<u64>(candy_data.public_mint_limit));
+                        bucket_table::add(&mut public_minters.minters, receiver_addr, candy_data.public_mint_limit);
                 };
                 // add check for public mint limit
                 let public_minters_limit= bucket_table::borrow_mut(&mut public_minters.minters, receiver_addr);
@@ -453,7 +452,7 @@ module candymachine::candymachine{
                 100,
                 vector<bool>[false, false, false],
                 vector<bool>[false, false, false, false, false],
-                option::none<u64>(),
+                0,
                 b"candy"
             );
             init_candy(
@@ -471,7 +470,7 @@ module candymachine::candymachine{
                 100,
                 vector<bool>[false, false, false],
                 vector<bool>[false, false, false, false, false],
-                option::some<u64>(1),
+                1,
                 b"candy_with_data"
             );
     }
@@ -550,7 +549,7 @@ module candymachine::candymachine{
             100,
             vector<bool>[false, false, false],
             vector<bool>[false, false, false, false, false],
-            option::some(1),
+            1,
             b"royalty"
         );
     }
@@ -579,7 +578,7 @@ module candymachine::candymachine{
             100,
             vector<bool>[false, false, false],
             vector<bool>[false, false, false, false, false],
-            option::some(1),
+            1,
             b"royalty"
         );
     }
@@ -643,14 +642,6 @@ module candymachine::candymachine{
             minter2,
             candy_machine
         );
-        // mint_script(
-        //     minter,
-        //     candy_machine
-        // );
-        // mint_script(
-        //     minter,
-        //     candy_machine
-        // );
     }
     #[test(creator = @0xb0c, minter = @0xc0c, minter2 = @0xc0d,candymachine=@0x1,aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 0x9, location = Self)]
