@@ -203,7 +203,7 @@ module candymachine::candymachine{
         }
         else{
             assert!(now > candy_data.public_sale_mint_time, ESALE_NOT_STARTED);
-            if (exists<PublicMinters>(candymachine)) {
+            if (!exists<PublicMinters>(candymachine)) {
                 move_to(&resource_signer_from_cap, PublicMinters {
                 // Can use a different size of bucket table depending on how big we expect the whitelist to be.
                 // Here because a global pubic minting max is optional, we are starting with a smaller size
@@ -218,6 +218,7 @@ module candymachine::candymachine{
                 };
                 // add check for public mint limit
                 let public_minters_limit= bucket_table::borrow_mut(&mut public_minters.minters, receiver_addr);
+                assert!(*public_minters_limit != 0, MINT_LIMIT_EXCEED);
                 *public_minters_limit = *public_minters_limit - 1;
             }
         };
@@ -455,6 +456,24 @@ module candymachine::candymachine{
                 option::none<u64>(),
                 b"candy"
             );
+            init_candy(
+                creator,
+                string::utf8(b"Collection: Mokshya"),
+                string::utf8(b"Collection: Mokshya"),
+                string::utf8(b"https://mokshya.io"),
+                signer::address_of(creator),
+                100,
+                0,
+                80,
+                100,
+                100,
+                0,
+                100,
+                vector<bool>[false, false, false],
+                vector<bool>[false, false, false, false, false],
+                option::some<u64>(1),
+                b"candy_with_data"
+            );
     }
     #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework)]
     public entry fun test_candy_machine(
@@ -478,6 +497,12 @@ module candymachine::candymachine{
             mint_script(
                 minter,
                 candy_machine
+            );
+            aptos_framework::timestamp::update_global_time_for_test_secs(200);
+            let candy_machine_2 = account::create_resource_address(&signer::address_of(creator), b"candy_with_data");
+            mint_script(
+                minter,
+                candy_machine_2
             );
     }
     #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework)]
@@ -576,7 +601,7 @@ module candymachine::candymachine{
     }
     #[test(creator = @0xb0c, minter = @0xc0c, minter2 = @0xc0d,candymachine=@0x1,aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 0x9, location = Self)]
-    public entry fun test_mint_limit(
+    public entry fun test_mint_limit_whitelist(
         creator: &signer,
         aptos_framework: &signer,
         minter: &signer,
@@ -626,5 +651,38 @@ module candymachine::candymachine{
         //     minter,
         //     candy_machine
         // );
+    }
+    #[test(creator = @0xb0c, minter = @0xc0c, minter2 = @0xc0d,candymachine=@0x1,aptos_framework = @aptos_framework)]
+    #[expected_failure(abort_code = 0x9, location = Self)]
+    public entry fun test_mint_limit_public(
+        creator: &signer,
+        aptos_framework: &signer,
+        minter: &signer,
+        minter2: &signer,
+        candymachine: &signer
+    )acquires ResourceInfo, CandyMachine,Whitelist,PublicMinters
+    {
+        set_up_test(creator,aptos_framework,minter,candymachine,80);
+        account::create_account_for_test(signer::address_of(minter2));
+        coin::register<0x1::aptos_coin::AptosCoin>(minter2);
+        coin::transfer<AptosCoin>(minter, signer::address_of(minter2), 300);
+        aptos_framework::timestamp::update_global_time_for_test_secs(200);
+        let candy_machine_2 = account::create_resource_address(&signer::address_of(creator), b"candy_with_data");
+        mint_script(
+            minter,
+            candy_machine_2
+        );
+        mint_script(
+            minter2,
+            candy_machine_2
+        );
+        mint_script(
+            minter,
+            candy_machine_2
+        );
+        mint_script(
+            minter2,
+            candy_machine_2
+        );
     }
 }
