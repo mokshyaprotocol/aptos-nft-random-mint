@@ -4,9 +4,9 @@ version = '1.0.0'
 
 [addresses]
 candymachine = "_"
+merkle_proof = "0xb9c7b4d7da344bbf03a3d4b144c2020dec1049427b96d0411024153485621185"
 Std = "0x1"
 aptos_std = "0x1"
-
 
 [dependencies]
 AptosFramework = { local = "../../../../aptos-core/aptos-move/framework/aptos-framework"}

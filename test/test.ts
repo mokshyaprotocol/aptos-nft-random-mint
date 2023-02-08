@@ -1,6 +1,6 @@
 import { HexString,AptosClient, AptosAccount, FaucetClient} from "aptos";
 
-const NODE_URL = "https://fullnode.testnet.aptoslabs.com";
+const NODE_URL = "https://aptos-testnet.nodereal.io/v1/81ccb0d76e66433abaf7543d0ff16688/v1";
 const FAUCET_URL = "https://faucet.devnet.aptoslabs.com";
 
 const client = new AptosClient(NODE_URL);
@@ -19,7 +19,7 @@ const notwhitelist = new AptosAccount()
 console.log("Alice Address: "+alice.address())
 console.log("Bob Address: "+bob.address())
 
-const pid ="0x1ede7bf0df6fd8ab5b5e0dfcb123a3bc4ffd3968ca37c01b5cb012be3147394a"
+const pid ="0xe691833c29f78f86cdda4b04d3a254d585ecbed81e759b1fac47b380caa08886"
 
 function makeid(length) {
   var result           = '';
@@ -48,7 +48,7 @@ describe("whitelist", () => {
             "1000",
             "42",
             date+10,
-            date+10,
+            date+11,
             "1000",
             "2000",
             "100",
@@ -65,9 +65,9 @@ describe("whitelist", () => {
 
         let getresourceAccount = await client.waitForTransactionWithResult(transactionRes.hash);
         let addresses = []
-        for (let i=0;i<900;i++){
+        // for (let i=0;i<900;i++){
           addresses.push((new AptosAccount()).address())
-        }
+        // }
         const create_whitelist_payloads = {
           type: "entry_function_payload",
           function: pid+"::candymachine::create_whitelist",
@@ -120,76 +120,76 @@ describe("whitelist", () => {
         console.log("Resume mint: "+transactionRes.hash)
         await client.waitForTransactionWithResult(transactionRes.hash);
       })
-    //   it("Public Mint", async () => {
-    //     const date = Math.floor(new Date().getTime() / 1000)
-    //     const create_candy_machine = {
-    //       type: "entry_function_payload",
-    //       function: pid+"::candymachine::init_candy",
-    //       type_arguments: [],
-    //       arguments: [
-    //         "Mokshya Test", // collection name
-    //         "This is the description of test collection", // collection description
-    //         "https://mokshya.io/nft/",  // collection uri 
-    //         alice.address(),
-    //         "1000",
-    //         "42",
-    //         date+10,
-    //         date+20,
-    //         "1000",
-    //         "2000",
-    //         "10000",
-    //         [true,true,true],
-    //         [true,true,true,true,true],
-    //         0,
-    //         ""+makeid(5),
-    //     ]
-    //     };
-    //     let txnRequest = await client.generateTransaction(alice.address(), create_candy_machine);
-    //     let bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
-    //     let transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
-    //     console.log("Candy Machine created: "+transactionRes.hash)
+      it("Public Mint", async () => {
+        const date = Math.floor(new Date().getTime() / 1000)
+        const create_candy_machine = {
+          type: "entry_function_payload",
+          function: pid+"::candymachine::init_candy",
+          type_arguments: [],
+          arguments: [
+            "Mokshya Test", // collection name
+            "This is the description of test collection", // collection description
+            "https://mokshya.io/nft/",  // collection uri 
+            alice.address(),
+            "1000",
+            "42",
+            date+10,
+            date+20,
+            "1000",
+            "2000",
+            "10000",
+            [true,true,true],
+            [true,true,true,true,true],
+            0,
+            ""+makeid(5),
+        ]
+        };
+        let txnRequest = await client.generateTransaction(alice.address(), create_candy_machine);
+        let bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
+        let transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
+        console.log("Candy Machine created: "+transactionRes.hash)
 
-    //     let getresourceAccount = await client.waitForTransactionWithResult(transactionRes.hash);
-    //     console.log("Resource Address: "+getresourceAccount['changes'][2]['address'])
+        let getresourceAccount = await client.waitForTransactionWithResult(transactionRes.hash);
+        console.log("Resource Address: "+getresourceAccount['changes'][2]['address'])
 
-    //     await delay(15000)
+        await delay(15000)
 
-    //     const create_mint_script1 = {
-    //       type: "entry_function_payload",
-    //       function: pid+"::candymachine::mint_script",
-    //       type_arguments: [],
-    //       arguments: [
-    //         getresourceAccount['changes'][2]['address']
-    //       ],
-    //     };
-    //   txnRequest = await client.generateTransaction(bob.address(), create_mint_script1);
-    //   bcsTxn = AptosClient.generateBCSTransaction(bob, txnRequest);
-    //   transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
-    //   console.log("Mint Successfull:  "+transactionRes.hash)
-    //   await client.waitForTransaction(transactionRes.hash);
-    //   await delay(5000)
-    //   const pause_payloads = {
-    //     type: "entry_function_payload",
-    //     function: pid+"::candymachine::resume_mint",
-    //     type_arguments: [],
-    //     arguments: [getresourceAccount['changes'][2]['address']]
-    //   }
-    //   txnRequest = await client.generateTransaction(alice.address(), pause_payloads);
-    //   bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
-    //   transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
-    //   console.log("Pause mint: "+transactionRes.hash)
-    //   await client.waitForTransactionWithResult(transactionRes.hash);
-    //   await delay(5000)
-    //   const resume_payloads = {
-    //     type: "entry_function_payload",
-    //     function: pid+"::candymachine::resume_mint",
-    //     type_arguments: [],
-    //     arguments: [getresourceAccount['changes'][2]['address']]
-    //   }
-    //   txnRequest = await client.generateTransaction(alice.address(), resume_payloads);
-    //   bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
-    //   transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
-    //   console.log("Resume mint: "+transactionRes.hash)
-    //   await client.waitForTransactionWithResult(transactionRes.hash);
-    // })
+        const create_mint_script1 = {
+          type: "entry_function_payload",
+          function: pid+"::candymachine::mint_script",
+          type_arguments: [],
+          arguments: [
+            getresourceAccount['changes'][2]['address']
+          ],
+        };
+      txnRequest = await client.generateTransaction(bob.address(), create_mint_script1);
+      bcsTxn = AptosClient.generateBCSTransaction(bob, txnRequest);
+      transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
+      console.log("Mint Successfull:  "+transactionRes.hash)
+      await client.waitForTransaction(transactionRes.hash);
+      await delay(5000)
+      const pause_payloads = {
+        type: "entry_function_payload",
+        function: pid+"::candymachine::resume_mint",
+        type_arguments: [],
+        arguments: [getresourceAccount['changes'][2]['address']]
+      }
+      txnRequest = await client.generateTransaction(alice.address(), pause_payloads);
+      bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
+      transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
+      console.log("Pause mint: "+transactionRes.hash)
+      await client.waitForTransactionWithResult(transactionRes.hash);
+      await delay(5000)
+      const resume_payloads = {
+        type: "entry_function_payload",
+        function: pid+"::candymachine::resume_mint",
+        type_arguments: [],
+        arguments: [getresourceAccount['changes'][2]['address']]
+      }
+      txnRequest = await client.generateTransaction(alice.address(), resume_payloads);
+      bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
+      transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
+      console.log("Resume mint: "+transactionRes.hash)
+      await client.waitForTransactionWithResult(transactionRes.hash);
+    })
   })
