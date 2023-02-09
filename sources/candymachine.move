@@ -503,11 +503,14 @@ module candymachine::candymachine{
     )
     {
         init_module(account);
-        let leaf1=  x"d4dee0beab2d53f2cc83e567171bd2820e49898130a22622b10ead383e90bd77";
-        let leaf2 = x"5f16f4c7f149ac4f9510d9cf8cf384038ad348b3bcdc01915f95de12df9d1b02";
-        vector::append(&mut leaf1,b"5");
-        vector::append(&mut leaf2,b"5");
-        let root = merkle_proof::find_root(aptos_hash::keccak256(leaf1),aptos_hash::keccak256(leaf2));
+        let add1=  x"d4dee0beab2d53f2cc83e567171bd2820e49898130a22622b10ead383e90bd77";
+        let add2 = x"5f16f4c7f149ac4f9510d9cf8cf384038ad348b3bcdc01915f95de12df9d1b02";
+        let mint_limit = 5;
+        vector::append(&mut add1,bcs::to_bytes(&mint_limit));
+        vector::append(&mut add2,bcs::to_bytes(&mint_limit));
+        let leaf1 = aptos_hash::keccak256(add1);
+        let leaf2 = aptos_hash::keccak256(add2);
+        let root = merkle_proof::find_root(leaf1,leaf2);
         account::create_account_for_test(signer::address_of(creator));
         account::create_account_for_test(signer::address_of(minter));
         let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(aptos_framework);
@@ -567,10 +570,13 @@ module candymachine::candymachine{
             candymachine: &signer
         )acquires ResourceInfo,CandyMachine,Whitelist,PublicMinters,MintData
         {
-            let leaf1=  x"d4dee0beab2d53f2cc83e567171bd2820e49898130a22622b10ead383e90bd77";
-            let leaf2 = x"5f16f4c7f149ac4f9510d9cf8cf384038ad348b3bcdc01915f95de12df9d1b02";
-            vector::append(&mut leaf1,b"5");
-            vector::append(&mut leaf2,b"5");
+            let add1=  x"d4dee0beab2d53f2cc83e567171bd2820e49898130a22622b10ead383e90bd77";
+            let add2 = x"5f16f4c7f149ac4f9510d9cf8cf384038ad348b3bcdc01915f95de12df9d1b02";
+            let mint_limit = 5;
+            vector::append(&mut add1,bcs::to_bytes(&mint_limit));
+            vector::append(&mut add2,bcs::to_bytes(&mint_limit));
+            let _leaf1 = aptos_hash::keccak256(add1);
+            let leaf2 = aptos_hash::keccak256(add2);
             set_up_test(account,creator,aptos_framework,minter,candymachine,80);
             aptos_framework::timestamp::update_global_time_for_test_secs(102);
             let whitelist_address= vector<address>[signer::address_of(minter)];
@@ -595,7 +601,7 @@ module candymachine::candymachine{
             mint_from_merkle(
                 minter,
                 candy_machine,
-                vector[aptos_hash::keccak256(leaf2)],
+                vector[leaf2],
                 5
             )
     }
