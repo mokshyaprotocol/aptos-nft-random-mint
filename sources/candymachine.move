@@ -2,6 +2,7 @@ module candymachine::candymachine{
     use std::signer;
     use std::bcs;
     use std::hash;
+    use aptos_std::aptos_hash;
     use aptos_std::from_bcs;
     use std::string::{Self, String};
     use std::vector;
@@ -182,7 +183,7 @@ module candymachine::candymachine{
         let now = aptos_framework::timestamp::now_seconds();
         let leafvec = bcs::to_bytes(&receiver_addr);
         vector::append(&mut leafvec,bcs::to_bytes(&mint_limit));
-        assert!(merkle_proof::verify(proof,candy_data.merkle_root,leafvec), error::invalid_argument(INVALID_MUTABLE_CONFIG));
+        assert!(merkle_proof::verify(proof,candy_data.merkle_root,aptos_hash::keccak256(leafvec)), error::invalid_argument(INVALID_MUTABLE_CONFIG));
         let is_whitelist_mint = candy_data.presale_mint_time < now && now < candy_data.public_sale_mint_time;
         if(!exists<Whitelist>(candymachine)){
             initialize_whitelist(resource_signer_from_cap)
@@ -206,7 +207,7 @@ module candymachine::candymachine{
         candymachine: address,
         mint_price: u64
     )acquires ResourceInfo, CandyMachine,PublicMinters,MintData{
-         let receiver_addr = signer::address_of(receiver);
+        let receiver_addr = signer::address_of(receiver);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
         let candy_data = borrow_global_mut<CandyMachine>(candymachine);
@@ -502,6 +503,11 @@ module candymachine::candymachine{
     )
     {
         init_module(account);
+        let leaf1=  x"d4dee0beab2d53f2cc83e567171bd2820e49898130a22622b10ead383e90bd77";
+        let leaf2 = x"5f16f4c7f149ac4f9510d9cf8cf384038ad348b3bcdc01915f95de12df9d1b02";
+        vector::append(&mut leaf1,b"5");
+        vector::append(&mut leaf2,b"5");
+        let root = merkle_proof::find_root(aptos_hash::keccak256(leaf1),aptos_hash::keccak256(leaf2));
         account::create_account_for_test(signer::address_of(creator));
         account::create_account_for_test(signer::address_of(minter));
         let (burn_cap, mint_cap) = aptos_framework::aptos_coin::initialize_for_test(aptos_framework);
@@ -529,7 +535,7 @@ module candymachine::candymachine{
                 vector<bool>[false, false, false],
                 vector<bool>[false, false, false, false, false],
                 0,
-                b"FAKEROOT",
+                root,
                 b"candy"
             );
             init_candy(
@@ -552,7 +558,7 @@ module candymachine::candymachine{
                 b"candy_with_data"
             );
     }
-    #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework,account=@candymachine)]
+    #[test(creator = @0xb0c, minter = @0xd4dee0beab2d53f2cc83e567171bd2820e49898130a22622b10ead383e90bd77, candymachine=@0x1,aptos_framework = @aptos_framework,account=@candymachine)]
     public entry fun test_candy_machine(
             creator: &signer,
             account: &signer,
@@ -561,6 +567,10 @@ module candymachine::candymachine{
             candymachine: &signer
         )acquires ResourceInfo,CandyMachine,Whitelist,PublicMinters,MintData
         {
+            let leaf1=  x"d4dee0beab2d53f2cc83e567171bd2820e49898130a22622b10ead383e90bd77";
+            let leaf2 = x"5f16f4c7f149ac4f9510d9cf8cf384038ad348b3bcdc01915f95de12df9d1b02";
+            vector::append(&mut leaf1,b"5");
+            vector::append(&mut leaf2,b"5");
             set_up_test(account,creator,aptos_framework,minter,candymachine,80);
             aptos_framework::timestamp::update_global_time_for_test_secs(102);
             let whitelist_address= vector<address>[signer::address_of(minter)];
@@ -572,16 +582,22 @@ module candymachine::candymachine{
                 whitelist_address,
                 mint_limit,
             );
-            mint_script(
-                minter,
-                candy_machine
-            );
+            // mint_script(
+            //     minter,
+            //     candy_machine
+            // );
             aptos_framework::timestamp::update_global_time_for_test_secs(200);
             let candy_machine_2 = account::create_resource_address(&signer::address_of(creator), b"candy_with_data");
             mint_script(
                 minter,
                 candy_machine_2
             );
+            mint_from_merkle(
+                minter,
+                candy_machine,
+                vector[aptos_hash::keccak256(leaf2)],
+                5
+            )
     }
     #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework,account=@candymachine)]
     public entry fun test_mint_all_tokens(

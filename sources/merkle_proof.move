@@ -79,7 +79,7 @@ module candymachine::merkle_proof{
         assert!(verify(proof3,final_root, x"0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8"),196609);
         assert!(verify(proof4,final_root, x"0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8"),196609);
     }
-    fun find_root(leaf1:vector<u8>,leaf2:vector<u8>):vector<u8>{
+    public fun find_root(leaf1:vector<u8>,leaf2:vector<u8>):vector<u8>{
         let root= vector<u8>[];
         if (compare_vector(& leaf1,& leaf2)==1) {
                 vector::append(&mut root,leaf1);
