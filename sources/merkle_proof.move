@@ -1,5 +1,6 @@
 module candymachine::merkle_proof{
     use std::vector;
+    use std::bcs;
     use aptos_std::aptos_hash;
 
     const BYTESLENGHTMISMATCH:u64 = 0;
@@ -7,7 +8,7 @@ module candymachine::merkle_proof{
     public fun verify(proof:vector<vector<u8>>,root:vector<u8>,leaf:vector<u8>):bool{
         let computedHash = leaf;
         assert!(vector::length(&root)==32,BYTESLENGHTMISMATCH);
-        assert!(vector::length(&leaf)==32,BYTESLENGHTMISMATCH);
+        // assert!(vector::length(&leaf)==32,BYTESLENGHTMISMATCH);
         let i = 0;
         while (i < vector::length(&proof)) {
             let proofElement=*vector::borrow_mut(&mut proof, i);
@@ -56,6 +57,12 @@ module candymachine::merkle_proof{
         assert!(verify(proof2,final_root,leaf2),100);
         assert!(verify(proof3,final_root,leaf3),101);
         assert!(verify(proof4,final_root,leaf4),102);
+        let r1= x"59e7d41bf3f7f1fe8a37a1de44a6609bc0c1cdcdfc36809657c77781ac3a9f8f";
+        let pf = vector[x"729cf120c553b7a27d8b00971086fe7e3ee3067e6b671b772931000f6b0ea318"];
+        let add = x"147e4d3a5b10eaed2a93536e284c23096dfcea9ac61f0a8420e5d01fbd8f0ea8";
+        let amount = 1;
+        vector::append(&mut add,bcs::to_bytes(&amount));
+        assert!(verify(pf,r1,aptos_hash::keccak256(add)),103)
     }
     #[test]
     #[expected_failure(abort_code = 196609, location = Self)]
