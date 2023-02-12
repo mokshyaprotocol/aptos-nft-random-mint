@@ -183,7 +183,7 @@ module candymachine::candymachine{
         let now = aptos_framework::timestamp::now_seconds();
         let leafvec = bcs::to_bytes(&receiver_addr);
         vector::append(&mut leafvec,bcs::to_bytes(&mint_limit));
-        assert!(merkle_proof::verify(proof,candy_data.merkle_root,aptos_hash::keccak256(leafvec)), error::invalid_argument(INVALID_MUTABLE_CONFIG));
+        assert!(merkle_proof::verify(proof,candy_data.merkle_root,aptos_hash::keccak256(aptos_hash::keccak256(leafvec))), error::invalid_argument(INVALID_MUTABLE_CONFIG));
         let is_whitelist_mint = candy_data.presale_mint_time < now && now < candy_data.public_sale_mint_time;
         if(!exists<Whitelist>(candymachine)){
             initialize_whitelist(resource_signer_from_cap)

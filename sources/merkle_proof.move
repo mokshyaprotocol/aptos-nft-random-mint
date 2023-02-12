@@ -62,7 +62,7 @@ module candymachine::merkle_proof{
         let add = x"147e4d3a5b10eaed2a93536e284c23096dfcea9ac61f0a8420e5d01fbd8f0ea8";
         let amount = 1;
         vector::append(&mut add,bcs::to_bytes(&amount));
-        assert!(verify(pf,r1,aptos_hash::keccak256(add)),103)
+        assert!(verify(pf,r1,add),103)
     }
     #[test]
     #[expected_failure(abort_code = 196609, location = Self)]

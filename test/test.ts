@@ -55,7 +55,7 @@ describe("whitelist", () => {
             [false,false,false],
             [false,false,false,false,false],
             0,
-            Buffer.from("0x95d8445751201b941e80e971e3fca4dea73366d1343d0c2a780c8b51919d61b8"),
+            new Uint8Array(Buffer.from("0x95d8445751201b941e80e971e3fca4dea73366d1343d0c2a780c8b51919d61b8")),
             ""+makeid(5),
         ]
         };
