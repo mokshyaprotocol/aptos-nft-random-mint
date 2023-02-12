@@ -1,5 +1,8 @@
 import { HexString,AptosClient, AptosAccount, FaucetClient} from "aptos";
-import invariant from 'tiny-invariant'
+import invariant from 'tiny-invariant';
+import keccak256 from "keccak256";
+import MerkleTree from "merkletreejs";
+
 const NODE_URL = "https://aptos-testnet.nodereal.io/v1/81ccb0d76e66433abaf7543d0ff16688/v1";
 const FAUCET_URL = "https://faucet.devnet.aptoslabs.com";
 
@@ -15,11 +18,18 @@ const alice = new AptosAccount(HexString.ensure("0x11111111111111111111111111111
 const bob = new AptosAccount(HexString.ensure("0x2111111111111111111111111111111111111111111111111111111111111111").toUint8Array());
 const notwhitelist = new AptosAccount()
 
+const toBytes32Array = (b: Buffer): number[] => {
+  invariant(b.length <= 32, `invalid length ${b.length}`);
+  const buf = Buffer.alloc(32);
+  b.copy(buf, 32 - b.length);
+
+  return Array.from(buf);
+};
 
 console.log("Alice Address: "+alice.address())
 console.log("Bob Address: "+bob.address())
 
-const pid ="0x8198b3314f043867281615aa541ddcd39947c3b9f0f76d539123bfd15981a72d"
+const pid ="0x7134042079eb2e356b0e254cfbc943de6ccc3bb15ee4dcc01c64d1274409709c"
 
 function makeid(length) {
   var result           = '';
@@ -33,7 +43,14 @@ function makeid(length) {
 const delay = (delayInms) => {
   return new Promise(resolve => setTimeout(resolve, delayInms));
 }
+
 describe("whitelist", () => {
+  let whitelistAddresses = [
+    alice.address().toString(),
+    notwhitelist.address().toString(),
+  ];
+  let leafNodes = whitelistAddresses.map((address) => keccak256(address));
+  let tree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
     it("Whitelist Mint", async () => {
         const date = Math.floor(new Date().getTime() / 1000)
         const create_candy_machine = {
@@ -55,7 +72,7 @@ describe("whitelist", () => {
             [false,false,false],
             [false,false,false,false,false],
             0,
-            new Uint8Array(Buffer.from("0x95d8445751201b941e80e971e3fca4dea73366d1343d0c2a780c8b51919d61b8")),
+            toBytes32Array(tree.getRoot()),
             ""+makeid(5),
         ]
         };
@@ -82,18 +99,11 @@ describe("whitelist", () => {
       //   console.log("Whitelist created: "+transactionRes.hash)
 
         // await delay(15000)
-        const toBytes32Array = (b: Buffer): number[] => {
-          invariant(b.length <= 32, `invalid length ${b.length}`);
-          const buf = Buffer.alloc(32);
-          b.copy(buf, 32 - b.length);
-      
-          return Array.from(buf);
-        };
         const proofs = [];
-        const proof = new Uint8Array(Buffer.from("0x729cf120c553b7a27d8b00971086fe7e3ee3067e6b671b772931000f6b0ea318"))
-        // proof.forEach((p) => {
-        //   proofs.push(toBytes32Array(p));
-        // });
+        const proof = tree.getProof((keccak256(alice.address().toString())));
+         proof.forEach((p) => {
+           proofs.push(toBytes32Array(p.data));
+         });
 
         const create_mint_script1 = {
           type: "entry_function_payload",
@@ -101,7 +111,7 @@ describe("whitelist", () => {
           type_arguments: [],
           arguments: [
             getresourceAccount['changes'][2]['address'],
-              [proof],
+            proofs,
             1
           ],
         };

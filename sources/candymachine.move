@@ -15,7 +15,7 @@ module candymachine::candymachine{
     use aptos_token::token::{Self,TokenDataId,TokenId};
     use candymachine::bucket_table::{Self, BucketTable};
     use candymachine::merkle_proof::{Self};
-    // use aptos_std::aptos_hash;
+
 
     const INVALID_SIGNER: u64 = 0;
     const INVALID_amount: u64 = 1;
@@ -174,7 +174,7 @@ module candymachine::candymachine{
         candymachine: address,
         proof: vector<vector<u8>>,
         mint_limit: u64
-    ) acquires ResourceInfo, CandyMachine,Whitelist,MintData,PublicMinters{
+    ) acquires ResourceInfo, CandyMachine,MintData{
         let receiver_addr = signer::address_of(receiver);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
@@ -182,25 +182,25 @@ module candymachine::candymachine{
         let mint_data = borrow_global_mut<MintData>(@candymachine);
         let now = aptos_framework::timestamp::now_seconds();
         let leafvec = bcs::to_bytes(&receiver_addr);
-        vector::append(&mut leafvec,bcs::to_bytes(&mint_limit));
-        assert!(merkle_proof::verify(proof,candy_data.merkle_root,aptos_hash::keccak256(aptos_hash::keccak256(leafvec))), error::invalid_argument(INVALID_MUTABLE_CONFIG));
-        let is_whitelist_mint = candy_data.presale_mint_time < now && now < candy_data.public_sale_mint_time;
-        if(!exists<Whitelist>(candymachine)){
-            initialize_whitelist(resource_signer_from_cap)
-        };
-        let mint_price = candy_data.public_sale_mint_price;
-        if(is_whitelist_mint){
-            let whitelist_data = borrow_global_mut<Whitelist>(candymachine);
-            if (!bucket_table::contains(&whitelist_data.whitelist, &receiver_addr)) {
-                    bucket_table::add(&mut whitelist_data.whitelist, receiver_addr, mint_limit);
-            };
-            // add check for public mint limit
-            let minted_nft = bucket_table::borrow_mut(&mut whitelist_data.whitelist, receiver_addr);
-            assert!(*minted_nft == mint_limit, MINT_LIMIT_EXCEED);
-            mint_data.total_apt=candy_data.presale_mint_price;
-            mint_price = candy_data.presale_mint_price
-        };
-        mint(receiver,candymachine,mint_price)
+        //vector::append(&mut leafvec,bcs::to_bytes(&mint_limit));
+        assert!(merkle_proof::verify(proof,candy_data.merkle_root,aptos_hash::keccak256(leafvec)), error::invalid_argument(INVALID_MUTABLE_CONFIG));
+        // let is_whitelist_mint = candy_data.presale_mint_time < now && now < candy_data.public_sale_mint_time;
+        // if(!exists<Whitelist>(candymachine)){
+        //     initialize_whitelist(resource_signer_from_cap)
+        // };
+        // let mint_price = candy_data.public_sale_mint_price;
+        // if(is_whitelist_mint){
+        //     let whitelist_data = borrow_global_mut<Whitelist>(candymachine);
+        //     if (!bucket_table::contains(&whitelist_data.whitelist, &receiver_addr)) {
+        //             bucket_table::add(&mut whitelist_data.whitelist, receiver_addr, mint_limit);
+        //     };
+        //     // add check for public mint limit
+        //     let minted_nft = bucket_table::borrow_mut(&mut whitelist_data.whitelist, receiver_addr);
+        //     assert!(*minted_nft == mint_limit, MINT_LIMIT_EXCEED);
+        //     mint_data.total_apt=candy_data.presale_mint_price;
+        //     mint_price = candy_data.presale_mint_price
+        // };
+        // mint(receiver,candymachine,mint_price)
     }
     fun mint(
         receiver: &signer,
