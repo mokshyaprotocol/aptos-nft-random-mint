@@ -186,7 +186,7 @@ module candymachine::candymachine{
         
         if(candy_data.public_sale_mint_price == mint_price && candy_data.public_mint_limit != 0){
             initialize_and_create_public_minter(&resource_signer_from_cap,candy_data,receiver_addr,candymachine);
-            // mint_data.total_apt=candy_data.public_sale_mint_price;
+            mint_data.total_apt=candy_data.public_sale_mint_price;
         };
         assert!(candy_data.paused == false, EPAUSED);
         assert!(candy_data.minted != candy_data.total_supply, ESOLD_OUT);
@@ -260,6 +260,13 @@ module candymachine::candymachine{
             );
         candy_data.minted=candy_data.minted+1;
         mint_data.total_mints=mint_data.total_mints+1
+    }
+    public entry fun set_root(account: &signer,candymachine: address,merkle_root: vector<u8>) acquires CandyMachine,ResourceInfo{
+        let account_addr = signer::address_of(account);
+        let resource_data = borrow_global<ResourceInfo>(candymachine);
+        assert!(resource_data.source == account_addr, INVALID_SIGNER);
+        let candy_data = borrow_global_mut<CandyMachine>(candymachine);
+        candy_data.merkle_root = merkle_root
     }
     public entry fun pause_mint(
         account: &signer,
