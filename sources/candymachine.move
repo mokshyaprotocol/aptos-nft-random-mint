@@ -8,7 +8,6 @@ module candymachine::candymachine{
     use std::string::{Self, String};
     use std::vector;
     use aptos_framework::aptos_coin::AptosCoin;
-    use std::error;
     use std::bit_vector::{Self,BitVector};
     use aptos_framework::coin::{Self};
     use aptos_framework::account;
@@ -94,7 +93,7 @@ module candymachine::candymachine{
         let now = aptos_framework::timestamp::now_seconds();
         move_to<ResourceInfo>(&resource_signer_from_cap, ResourceInfo{resource_cap: resource_cap, source: signer::address_of(account)});
         assert!(vector::length(&collection_mutate_setting) == 3 && vector::length(&token_mutate_setting) == 5, INVALID_MUTABLE_CONFIG);
-        assert!(royalty_points_denominator > 0, error::invalid_argument(EINVALID_ROYALTY_NUMERATOR_DENOMINATOR));
+        assert!(royalty_points_denominator > 0, EINVALID_ROYALTY_NUMERATOR_DENOMINATOR);
         assert!(public_sale_mint_time >=  now && presale_mint_time >= now,EINVALID_MINT_TIME);
         assert!(royalty_points_numerator <= royalty_points_denominator, EINVALID_ROYALTY_NUMERATOR_DENOMINATOR);
         let candies_data = create_bit_mask(total_supply);
@@ -303,7 +302,7 @@ module candymachine::candymachine{
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         let now = aptos_framework::timestamp::now_seconds();
-        assert!(public_sale_mint_time >=  now && presale_mint_time >= now, error::invalid_argument(EINVALID_MINT_TIME));
+        assert!(public_sale_mint_time >=  now && presale_mint_time >= now, EINVALID_MINT_TIME);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let candy_data = borrow_global_mut<CandyMachine>(candymachine);
         assert!(royalty_points_denominator == 0, EINVALID_ROYALTY_NUMERATOR_DENOMINATOR);
