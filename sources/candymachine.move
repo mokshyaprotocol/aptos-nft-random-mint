@@ -29,6 +29,7 @@ module candymachine::candymachine{
     const EINVALID_MINT_TIME:u64 = 8;
     const MINT_LIMIT_EXCEED: u64 = 9;
     const INVALID_PROOF:u64 = 10;
+    const WhitelistMintNotEnabled: u64 = 11;
 
      struct MintData has key {
         total_mints: u64,
@@ -92,10 +93,10 @@ module candymachine::candymachine{
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_cap);
         let now = aptos_framework::timestamp::now_seconds();
         move_to<ResourceInfo>(&resource_signer_from_cap, ResourceInfo{resource_cap: resource_cap, source: signer::address_of(account)});
-        assert!(vector::length(&collection_mutate_setting) == 3 && vector::length(&token_mutate_setting) == 5, error::invalid_argument(INVALID_MUTABLE_CONFIG));
+        assert!(vector::length(&collection_mutate_setting) == 3 && vector::length(&token_mutate_setting) == 5, INVALID_MUTABLE_CONFIG);
         assert!(royalty_points_denominator > 0, error::invalid_argument(EINVALID_ROYALTY_NUMERATOR_DENOMINATOR));
-        assert!(public_sale_mint_time >=  now && presale_mint_time >= now, error::invalid_argument(EINVALID_MINT_TIME));
-        assert!(royalty_points_numerator <= royalty_points_denominator, error::invalid_argument(EINVALID_ROYALTY_NUMERATOR_DENOMINATOR));
+        assert!(public_sale_mint_time >=  now && presale_mint_time >= now,EINVALID_MINT_TIME);
+        assert!(royalty_points_numerator <= royalty_points_denominator, EINVALID_ROYALTY_NUMERATOR_DENOMINATOR);
         let candies_data = create_bit_mask(total_supply);
         move_to<CandyMachine>(&resource_signer_from_cap, CandyMachine{
             collection_name,
@@ -150,12 +151,13 @@ module candymachine::candymachine{
         let now = aptos_framework::timestamp::now_seconds();
         let leafvec = bcs::to_bytes(&receiver_addr);
         vector::append(&mut leafvec,bcs::to_bytes(&mint_limit));
-        assert!(merkle_proof::verify(proof,candy_data.merkle_root,aptos_hash::keccak256(leafvec)),INVALID_PROOF);
         let is_whitelist_mint = candy_data.presale_mint_time < now && now < candy_data.public_sale_mint_time;
+        assert!(merkle_proof::verify(proof,candy_data.merkle_root,aptos_hash::keccak256(leafvec)),INVALID_PROOF);
         if(!exists<Whitelist>(candymachine)){
             initialize_whitelist(resource_signer_from_cap)
         };
         let mint_price = candy_data.public_sale_mint_price;
+        assert!(is_whitelist_mint, WhitelistMintNotEnabled);
         if(is_whitelist_mint){
             // No need to check limit if mint limit = 0, this means the minter can mint unlimited amount of tokens
             if(mint_limit != 0){
@@ -533,38 +535,6 @@ module candymachine::candymachine{
                 b"FAKEROOT",
                 b"candy_with_data"
             );
-    }
-    #[test(creator = @0xb0c, minter = @0xd4dee0beab2d53f2cc83e567171bd2820e49898130a22622b10ead383e90bd77, candymachine=@0x1,aptos_framework = @aptos_framework,account=@candymachine)]
-    public entry fun test_candy_machine(
-            creator: &signer,
-            account: &signer,
-            aptos_framework: &signer,
-            minter: &signer,
-            candymachine: &signer
-        )acquires ResourceInfo,CandyMachine,Whitelist,PublicMinters,MintData
-        {
-            let add1=  x"d4dee0beab2d53f2cc83e567171bd2820e49898130a22622b10ead383e90bd77";
-            let add2 = x"5f16f4c7f149ac4f9510d9cf8cf384038ad348b3bcdc01915f95de12df9d1b02";
-            let mint_limit = 5;
-            vector::append(&mut add1,bcs::to_bytes(&mint_limit));
-            vector::append(&mut add2,bcs::to_bytes(&mint_limit));
-            let _leaf1 = aptos_hash::keccak256(add1);
-            let leaf2 = aptos_hash::keccak256(add2);
-            set_up_test(account,creator,aptos_framework,minter,candymachine,80,5);
-            aptos_framework::timestamp::update_global_time_for_test_secs(102);
-            let candy_machine = account::create_resource_address(&signer::address_of(creator), b"candy");
-            aptos_framework::timestamp::update_global_time_for_test_secs(200);
-            let candy_machine_2 = account::create_resource_address(&signer::address_of(creator), b"candy_with_data");
-            mint_script(
-                minter,
-                candy_machine_2
-            );
-            mint_from_merkle(
-                minter,
-                candy_machine,
-                vector[leaf2],
-                5
-            )
     }
     #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework,account=@candymachine)]
     public entry fun test_mint_all_tokens(

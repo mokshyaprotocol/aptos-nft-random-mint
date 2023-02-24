@@ -1,14 +1,40 @@
 import * as fs from "fs"
+import { u64 } from "@saberhq/token-utils";
+import keccak256 from "keccak256";
+import MerkleTree from "merkletreejs";
+import {HexString} from "aptos";
+
+const to_buf = (account:Uint8Array,amount:number): Buffer=>{ 
+  return Buffer.concat([
+    account,
+    new u64(amount).toArrayLike(Buffer, "le", 8),
+  ]);
+}
 export async function create_candy(alice,fileStream,client,makeid,AptosClient) {
-    let collection_mutable = [false,false,false,false,false]
-    let token_mutable = [false,false,false]
+    let token_mutable = [false,false,false,false,false]
+    let collection_mutable = [false,false,false]
     if(fileStream["mutable"]){
-      collection_mutable = [true,true,true,true,true,]
-      token_mutable = [true,true,true,]
+      token_mutable = [true,true,true,true,true,]
+      collection_mutable = [true,true,true,]
     }
+    let whitelistAddresses = [];
+    for(let i=0;i<fileStream['whitelist'].length;i++){
+      whitelistAddresses.push(to_buf(HexString.ensure(fileStream['whitelist'][i][0]).toUint8Array(),fileStream['whitelist'][i][1]))
+    }
+    let leafNodes = whitelistAddresses.map((address) => keccak256(address));
+    let rt;
+    if (leafNodes[0] <= leafNodes[1])
+    {
+      rt = keccak256(Buffer.concat([leafNodes[0],leafNodes[1]]));
+    }
+    else
+    {
+       rt = keccak256(Buffer.concat([leafNodes[1],leafNodes[0]]));
+    }
+    let tree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
     const create_candy_machine = {
       type: "entry_function_payload",
-      function: "0xb9c7b4d7da344bbf03a3d4b144c2020dec1049427b96d0411024153485621185::candymachine::init_candy",
+      function: "0x8035a63a18798115679466eef240aca66364707044f0ac7484e4c462c8310ae9::candymachine::init_candy",
       type_arguments: [],
       arguments: [
         fileStream['collection_name'],
@@ -24,8 +50,9 @@ export async function create_candy(alice,fileStream,client,makeid,AptosClient) {
         fileStream["total_supply"],
         collection_mutable,
         token_mutable,
-        ""+makeid(5),
-    ]
+        fileStream["public_mint_limit"],
+        tree.getRoot(),
+        ""+makeid(5),]
     };
     let txnRequest = await client.generateTransaction(alice.address(), create_candy_machine);
     let bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
