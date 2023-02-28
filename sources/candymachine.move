@@ -558,7 +558,7 @@ module candymachine::candymachine{
             }
         }
     #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework,account=@candymachine)]
-    #[expected_failure(abort_code = 0x10003, location = Self)]
+    #[expected_failure(abort_code = 0x3, location = Self)]
     public entry fun test_royalty_overflow(
         creator: &signer,
         account: &signer,
@@ -590,7 +590,7 @@ module candymachine::candymachine{
         );
     }
     #[test(creator = @0xb0c, minter = @0xc0c, candymachine=@0x1,aptos_framework = @aptos_framework,account=@candymachine)]
-    #[expected_failure(abort_code = 0x10008, location = Self)]
+    #[expected_failure(abort_code = 0x8, location = Self)]
     public entry fun test_timestamp(
         creator: &signer,
         account: &signer,
