@@ -145,7 +145,7 @@ module candymachine::candymachine{
         let receiver_addr = signer::address_of(receiver);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
-        let candy_data = borrow_global_mut<CandyMachine>(candymachine);
+        let candy_data = borrow_global<CandyMachine>(candymachine);
         let mint_data = borrow_global_mut<MintData>(@candymachine);
         let now = aptos_framework::timestamp::now_seconds();
         let leafvec = bcs::to_bytes(&receiver_addr);
@@ -155,24 +155,20 @@ module candymachine::candymachine{
         if(!exists<Whitelist>(candymachine)){
             initialize_whitelist(resource_signer_from_cap)
         };
-        let mint_price = candy_data.public_sale_mint_price;
         assert!(is_whitelist_mint, WhitelistMintNotEnabled);
-        if(is_whitelist_mint){
-            // No need to check limit if mint limit = 0, this means the minter can mint unlimited amount of tokens
-            if(mint_limit != 0){
-                let whitelist_data = borrow_global_mut<Whitelist>(candymachine);
-                if (!bucket_table::contains(&whitelist_data.minters, &receiver_addr)) {
-                    // First time minting mint limit = 0 
-                    bucket_table::add(&mut whitelist_data.minters, receiver_addr, 0);
-                };
-                let minted_nft = bucket_table::borrow_mut(&mut whitelist_data.minters, receiver_addr);
-                assert!(*minted_nft != mint_limit, MINT_LIMIT_EXCEED);
-                *minted_nft = *minted_nft + 1;
-                mint_data.total_apt=candy_data.presale_mint_price;
-                mint_price = candy_data.presale_mint_price
+        // No need to check limit if mint limit = 0, this means the minter can mint unlimited amount of tokens
+        if(mint_limit != 0){
+            let whitelist_data = borrow_global_mut<Whitelist>(candymachine);
+            if (!bucket_table::contains(&whitelist_data.minters, &receiver_addr)) {
+                // First time minting mint limit = 0 
+                bucket_table::add(&mut whitelist_data.minters, receiver_addr, 0);
             };
-            mint(receiver,candymachine,mint_price)
+            let minted_nft = bucket_table::borrow_mut(&mut whitelist_data.minters, receiver_addr);
+            assert!(*minted_nft != mint_limit, MINT_LIMIT_EXCEED);
+            *minted_nft = *minted_nft + 1;
+            mint_data.total_apt=candy_data.presale_mint_price;
         };
+        mint(receiver,candymachine,candy_data.presale_mint_price);
     }
     fun mint(
         receiver: &signer,
@@ -305,7 +301,6 @@ module candymachine::candymachine{
         assert!(public_sale_mint_time >=  now && presale_mint_time >= now, EINVALID_MINT_TIME);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let candy_data = borrow_global_mut<CandyMachine>(candymachine);
-        assert!(royalty_points_denominator == 0, EINVALID_ROYALTY_NUMERATOR_DENOMINATOR);
         if (royalty_points_denominator>0){
             candy_data.royalty_points_denominator = royalty_points_denominator
         };
