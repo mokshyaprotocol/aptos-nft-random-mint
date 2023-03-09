@@ -307,11 +307,11 @@ module candymachine::candymachine{
             candy_data.royalty_points_numerator = royalty_points_numerator
         };
         if (presale_mint_time>0){
-            assert!(presale_mint_time > now,EINVALID_MINT_TIME);
+            assert!(presale_mint_time >= now,EINVALID_MINT_TIME);
             candy_data.presale_mint_time = presale_mint_time
         };
         if (public_sale_mint_time>0){
-            assert!(public_sale_mint_time >= candy_data.presale_mint_time,EINVALID_MINT_TIME);
+            assert!(public_sale_mint_time > candy_data.presale_mint_time,EINVALID_MINT_TIME);
             candy_data.public_sale_mint_time = public_sale_mint_time
         };
         if (candy_data.public_sale_mint_price==0 || candy_data.presale_mint_price==0){
