@@ -390,11 +390,6 @@ module candymachine::candymachine{
     {
         let full_buckets = nfts/1024; 
         let remaining =nfts-full_buckets*1024; 
-        if (nfts < 1024)
-        {
-            full_buckets=0;
-            remaining= nfts;
-        };
         let v1 = vector::empty();
         while (full_buckets>0)
         {
