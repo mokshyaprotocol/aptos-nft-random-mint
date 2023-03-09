@@ -94,7 +94,7 @@ module candymachine::candymachine{
         move_to<ResourceInfo>(&resource_signer_from_cap, ResourceInfo{resource_cap: resource_cap, source: signer::address_of(account)});
         assert!(vector::length(&collection_mutate_setting) == 3 && vector::length(&token_mutate_setting) == 5, INVALID_MUTABLE_CONFIG);
         assert!(royalty_points_denominator > 0, EINVALID_ROYALTY_NUMERATOR_DENOMINATOR);
-        assert!(public_sale_mint_time >=  now && presale_mint_time >= now,EINVALID_MINT_TIME);
+        assert!(public_sale_mint_time > presale_mint_time && presale_mint_time >= now,EINVALID_MINT_TIME);
         assert!(royalty_points_numerator <= royalty_points_denominator, EINVALID_ROYALTY_NUMERATOR_DENOMINATOR);
         let candies_data = create_bit_mask(total_supply);
         move_to<CandyMachine>(&resource_signer_from_cap, CandyMachine{
@@ -307,7 +307,7 @@ module candymachine::candymachine{
             candy_data.royalty_points_numerator = royalty_points_numerator
         };
         if (presale_mint_time>0){
-            assert!(presale_mint_time >= now,EINVALID_MINT_TIME);
+            assert!(presale_mint_time > now,EINVALID_MINT_TIME);
             candy_data.presale_mint_time = presale_mint_time
         };
         if (public_sale_mint_time>0){
