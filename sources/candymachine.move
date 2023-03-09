@@ -298,7 +298,6 @@ module candymachine::candymachine{
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         let now = aptos_framework::timestamp::now_seconds();
-        assert!(public_sale_mint_time >=  now && presale_mint_time >= now, EINVALID_MINT_TIME);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let candy_data = borrow_global_mut<CandyMachine>(candymachine);
         if (royalty_points_denominator>0){
@@ -308,9 +307,11 @@ module candymachine::candymachine{
             candy_data.royalty_points_numerator = royalty_points_numerator
         };
         if (presale_mint_time>0){
+            assert!(presale_mint_time >= now,EINVALID_MINT_TIME);
             candy_data.presale_mint_time = presale_mint_time
         };
         if (public_sale_mint_time>0){
+            assert!(public_sale_mint_time >= candy_data.presale_mint_time,EINVALID_MINT_TIME);
             candy_data.public_sale_mint_time = public_sale_mint_time
         };
         if (candy_data.public_sale_mint_price==0 || candy_data.presale_mint_price==0){
