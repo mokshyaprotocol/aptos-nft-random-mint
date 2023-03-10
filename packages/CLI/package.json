@@ -1,6 +1,6 @@
 {
   "name": "mokshya",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "",
   "main": "./lib/index.js",
   "scripts": {
@@ -30,6 +30,8 @@
     "commander": "^9.4.1",
     "dotenv": "16.0.1",
     "figlet": "^1.5.2",
+    "global": "^4.4.0",
+    "local": "^0.3.3",
     "path": "^0.12.7"
   },
   "devDependencies": {

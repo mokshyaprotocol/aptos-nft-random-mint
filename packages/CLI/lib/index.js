@@ -27,14 +27,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const aptos_1 = require("aptos");
 const fs = __importStar(require("fs"));
 const create_candy_1 = require("./instructions/create_candy");
-const create_whitelist_1 = require("./instructions/create_whitelist");
+const update_root_1 = require("./instructions/update_root");
 const seedGenerate_1 = require("./utils/seedGenerate");
 const commander_1 = require("commander");
 commander_1.program
     .version('0.0.1')
     .description("Candy machine smart contract for Aptos Blockchain.")
     .option('-c, --create_candy', 'create_candy')
-    .option('-w, --create_whitelist', 'create_whitelist')
+    .option('-u, --update_root', 'update_root')
     .option('-w, --config', 'config')
     .option('-p, --pause_mint', 'pause_mint')
     .parse(process.argv);
@@ -42,15 +42,14 @@ let argIndex = process.argv.indexOf('--config');
 const fileStream = JSON.parse(fs.readFileSync(process.argv[argIndex + 1], "utf8"));
 const options = commander_1.program.opts();
 const client = new aptos_1.AptosClient(fileStream['NODE_URL']);
-// const fileStream = JSON.parse(fs.readFileSync('config.json',"utf8"));
 if (options.create_candy) {
     const alice = new aptos_1.AptosAccount(aptos_1.HexString.ensure(fileStream['creator_private_key']).toUint8Array(), undefined);
     (0, create_candy_1.create_candy)(alice, fileStream, client, seedGenerate_1.makeid, aptos_1.AptosClient);
 }
-if (options.create_whitelist) {
+if (options.update_root) {
     const alice = new aptos_1.AptosAccount(aptos_1.HexString.ensure(fileStream['creator_private_key']).toUint8Array(), undefined);
     const client = new aptos_1.AptosClient(fileStream['NODE_URL']);
-    (0, create_whitelist_1.create_whitelist)(alice, fileStream, client, seedGenerate_1.makeid, aptos_1.AptosClient);
+    (0, update_root_1.update_root)(alice, fileStream, client, seedGenerate_1.makeid, aptos_1.AptosClient);
 }
 if (!process.argv.slice(1).length) {
     commander_1.program.outputHelp();

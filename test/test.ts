@@ -1,12 +1,15 @@
-import { HexString,AptosClient, AptosAccount, FaucetClient} from "aptos";
+import { HexString,AptosClient, AptosAccount, FaucetClient,BCS} from "aptos";
+import invariant from 'tiny-invariant';
+import keccak256 from "keccak256";
+import MerkleTree from "merkletreejs";
+import { u64 } from "@saberhq/token-utils";
 
-const NODE_URL = "https://fullnode.testnet.aptoslabs.com";
+const NODE_URL = "https://aptos-testnet.nodereal.io/v1/81ccb0d76e66433abaf7543d0ff16688/v1";
 const FAUCET_URL = "https://faucet.devnet.aptoslabs.com";
 
 const client = new AptosClient(NODE_URL);
 const faucetClient = new FaucetClient(NODE_URL, FAUCET_URL);
-var enc = new TextEncoder(); // always utf-8
-
+var enc = new TextEncoder(); 
 
 // This private key is only for test purpose do not use this in mainnet
 const alice = new AptosAccount(HexString.ensure("0x1111111111111111111111111111111111111111111111111111111111111111").toUint8Array());
@@ -15,11 +18,17 @@ const alice = new AptosAccount(HexString.ensure("0x11111111111111111111111111111
 const bob = new AptosAccount(HexString.ensure("0x2111111111111111111111111111111111111111111111111111111111111111").toUint8Array());
 const notwhitelist = new AptosAccount()
 
+const to_buf = (account:Uint8Array,amount:number): Buffer=>{ 
+  return Buffer.concat([
+    account,
+    new u64(amount).toArrayLike(Buffer, "le", 8),
+  ]);
+}
 
 console.log("Alice Address: "+alice.address())
 console.log("Bob Address: "+bob.address())
 
-const pid ="0xb9c7b4d7da344bbf03a3d4b144c2020dec1049427b96d0411024153485621185"
+const pid ="0x8035a63a18798115679466eef240aca66364707044f0ac7484e4c462c8310ae9"
 
 function makeid(length) {
   var result           = '';
@@ -33,8 +42,27 @@ function makeid(length) {
 const delay = (delayInms) => {
   return new Promise(resolve => setTimeout(resolve, delayInms));
 }
+
 describe("whitelist", () => {
-    it("Whitelist Mint", async () => {
+  let whitelistAddresses = [
+    to_buf(notwhitelist.address().toUint8Array(),2),
+  ];
+  for(let i=0;i<200;i++){
+    whitelistAddresses.push(to_buf(new AptosAccount().address().toUint8Array(),1))
+  }
+  whitelistAddresses.push(to_buf(alice.address().toUint8Array(),1))
+  let leafNodes = whitelistAddresses.map((address) => keccak256(address));
+  let rt;
+  if (leafNodes[0] <= leafNodes[1])
+  {
+    rt = keccak256(Buffer.concat([leafNodes[0],leafNodes[1]]));
+  }
+  else
+  {
+     rt = keccak256(Buffer.concat([leafNodes[1],leafNodes[0]]));
+  }
+  let tree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
+  it("Merkle Mint", async () => {
         const date = Math.floor(new Date().getTime() / 1000)
         const create_candy_machine = {
           type: "entry_function_payload",
@@ -47,13 +75,15 @@ describe("whitelist", () => {
             alice.address(),
             "1000",
             "42",
-            date+10,
-            date+10,
+            date+1000,
+            date+10000,
             "1000",
             "2000",
             "100",
             [false,false,false],
             [false,false,false,false,false],
+            0,
+            tree.getRoot(),
             ""+makeid(5),
         ]
         };
@@ -63,41 +93,50 @@ describe("whitelist", () => {
         console.log("Candy Machine created: "+transactionRes.hash)
 
         let getresourceAccount = await client.waitForTransactionWithResult(transactionRes.hash);
-        let addresses = []
-        for (let i=0;i<1000;i++){
-          addresses.push(bob.address())
-        }
-        const create_whitelist_payloads = {
-          type: "entry_function_payload",
-          function: pid+"::candymachine::create_whitelist",
-          type_arguments: [],
-          arguments: [getresourceAccount['changes'][2]['address'],addresses,1,""+makeid(5)],
-        };
-        console.log("Resource Address: "+getresourceAccount['changes'][2]['address'])
-        txnRequest = await client.generateTransaction(alice.address(), create_whitelist_payloads);
-        bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
-        transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
-        console.log("Whitelist created: "+transactionRes.hash)
+      await delay(15000)
+        const proofs = [];
+        const proof = tree.getProof((keccak256(whitelistAddresses[(whitelistAddresses.length)-1])));
+        let not_whitelist= keccak256(whitelistAddresses[1]);
+       // 0x50130b2cf86b99972623f93b979ccfda73494b3bc61128b25c88d734d5547cda
+         proof.forEach((p) => {
+           proofs.push(p.data);
+         });
 
-        await delay(15000)
         const create_mint_script1 = {
           type: "entry_function_payload",
-          function: pid+"::candymachine::mint_script",
+          function: pid+"::candymachine::mint_from_merkle",
           type_arguments: [],
           arguments: [
-            getresourceAccount['changes'][2]['address']
+            getresourceAccount['changes'][2]['address'],
+            proofs,
+            BigInt(1)
           ],
         };
-      txnRequest = await client.generateTransaction(bob.address(), create_mint_script1);
-      bcsTxn = AptosClient.generateBCSTransaction(bob, txnRequest);
+      txnRequest = await client.generateTransaction(alice.address(), create_mint_script1);
+      bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
       transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
       console.log("Mint Successfull:  "+transactionRes.hash)
       client.waitForTransaction(transactionRes.hash);
-        
+      await delay(15000)
+      const create_mint_script2 = {
+        type: "entry_function_payload",
+        function: pid+"::candymachine::mint_script",
+        type_arguments: [],
+        arguments: [
+          getresourceAccount['changes'][2]['address'],
+          // proofs,
+          // BigInt(1)
+        ],
+      };
+    txnRequest = await client.generateTransaction(alice.address(), create_mint_script2);
+    bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
+    transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
+    console.log("Mint Successfull:  "+transactionRes.hash)
+    client.waitForTransaction(transactionRes.hash);
 
     const pause_payloads = {
         type: "entry_function_payload",
-        function: pid+"::candymachine::resume_mint",
+        function: pid+"::candymachine::pause_mint",
         type_arguments: [],
         arguments: [getresourceAccount['changes'][2]['address']]
       }
@@ -119,75 +158,4 @@ describe("whitelist", () => {
         console.log("Resume mint: "+transactionRes.hash)
         await client.waitForTransactionWithResult(transactionRes.hash);
       })
-      it("Public Mint", async () => {
-        const date = Math.floor(new Date().getTime() / 1000)
-        const create_candy_machine = {
-          type: "entry_function_payload",
-          function: pid+"::candymachine::init_candy",
-          type_arguments: [],
-          arguments: [
-            "Mokshya Test", // collection name
-            "This is the description of test collection", // collection description
-            "https://mokshya.io/nft/",  // collection uri 
-            alice.address(),
-            "1000",
-            "42",
-            date+10,
-            date+20,
-            "1000",
-            "2000",
-            "10000",
-            [true,true,true],
-            [true,true,true,true,true],
-            ""+makeid(5),
-        ]
-        };
-        let txnRequest = await client.generateTransaction(alice.address(), create_candy_machine);
-        let bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
-        let transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
-        console.log("Candy Machine created: "+transactionRes.hash)
-
-        let getresourceAccount = await client.waitForTransactionWithResult(transactionRes.hash);
-        console.log("Resource Address: "+getresourceAccount['changes'][2]['address'])
-
-        await delay(15000)
-
-        const create_mint_script1 = {
-          type: "entry_function_payload",
-          function: pid+"::candymachine::mint_script",
-          type_arguments: [],
-          arguments: [
-            getresourceAccount['changes'][2]['address']
-          ],
-        };
-      txnRequest = await client.generateTransaction(bob.address(), create_mint_script1);
-      bcsTxn = AptosClient.generateBCSTransaction(bob, txnRequest);
-      transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
-      console.log("Mint Successfull:  "+transactionRes.hash)
-      await client.waitForTransaction(transactionRes.hash);
-      await delay(5000)
-      const pause_payloads = {
-        type: "entry_function_payload",
-        function: pid+"::candymachine::resume_mint",
-        type_arguments: [],
-        arguments: [getresourceAccount['changes'][2]['address']]
-      }
-      txnRequest = await client.generateTransaction(alice.address(), pause_payloads);
-      bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
-      transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
-      console.log("Pause mint: "+transactionRes.hash)
-      await client.waitForTransactionWithResult(transactionRes.hash);
-      await delay(5000)
-      const resume_payloads = {
-        type: "entry_function_payload",
-        function: pid+"::candymachine::resume_mint",
-        type_arguments: [],
-        arguments: [getresourceAccount['changes'][2]['address']]
-      }
-      txnRequest = await client.generateTransaction(alice.address(), resume_payloads);
-      bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
-      transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
-      console.log("Resume mint: "+transactionRes.hash)
-      await client.waitForTransactionWithResult(transactionRes.hash);
-    })
-  })
+})
