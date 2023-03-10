@@ -1,4 +1,4 @@
-Candy machine smart contract for Aptos Blockchain. The smart contract is available in mainnet and testnet. For detail information please go to our [docs](https://docs.mokshya.io)
+Random NFT mint smart contract for Aptos Blockchain. The smart contract is available in mainnet and testnet. For detail information please go to our [docs](https://docs.mokshya.io)
 
 Mainnet contract : 0x8035a63a18798115679466eef240aca66364707044f0ac7484e4c462c8310ae9
 
