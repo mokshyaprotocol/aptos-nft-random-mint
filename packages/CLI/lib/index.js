@@ -38,20 +38,22 @@ commander_1.program
     .option('-w, --config', 'config')
     .option('-p, --pause_mint', 'pause_mint')
     .parse(process.argv);
-let argIndex = process.argv.indexOf('--config');
-const fileStream = JSON.parse(fs.readFileSync(process.argv[argIndex + 1], "utf8"));
 const options = commander_1.program.opts();
-const client = new aptos_1.AptosClient(fileStream['NODE_URL']);
 if (options.create_candy) {
+    let argIndex = process.argv.indexOf('--config');
+    const fileStream = JSON.parse(fs.readFileSync(process.argv[argIndex + 1], "utf8"));
+    const client = new aptos_1.AptosClient(fileStream['NODE_URL']);
     const alice = new aptos_1.AptosAccount(aptos_1.HexString.ensure(fileStream['creator_private_key']).toUint8Array(), undefined);
     (0, create_candy_1.create_candy)(alice, fileStream, client, seedGenerate_1.makeid, aptos_1.AptosClient);
 }
-if (options.update_root) {
+else if (options.update_root) {
+    let argIndex = process.argv.indexOf('--config');
+    const fileStream = JSON.parse(fs.readFileSync(process.argv[argIndex + 1], "utf8"));
     const alice = new aptos_1.AptosAccount(aptos_1.HexString.ensure(fileStream['creator_private_key']).toUint8Array(), undefined);
     const client = new aptos_1.AptosClient(fileStream['NODE_URL']);
     (0, update_root_1.update_root)(alice, fileStream, client, seedGenerate_1.makeid, aptos_1.AptosClient);
 }
-if (!process.argv.slice(1).length) {
+else {
     commander_1.program.outputHelp();
 }
 //# sourceMappingURL=index.js.map

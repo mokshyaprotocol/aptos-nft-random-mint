@@ -15,22 +15,22 @@ program
   .option('-p, --pause_mint', 'pause_mint')
   .parse(process.argv);
 
-let argIndex = process.argv.indexOf('--config')
-
-const fileStream = JSON.parse(fs.readFileSync(process.argv[argIndex+1],"utf8"));
 const options = program.opts();
-const client = new AptosClient(fileStream['NODE_URL']);
-
 if (options.create_candy) {
+  let argIndex = process.argv.indexOf('--config')
+  const fileStream = JSON.parse(fs.readFileSync(process.argv[argIndex+1],"utf8"));
+  const client = new AptosClient(fileStream['NODE_URL']);
   const alice = new AptosAccount(HexString.ensure(fileStream['creator_private_key']).toUint8Array(),undefined);
   create_candy(alice,fileStream,client,makeid,AptosClient);  
 }
-if (options.update_root) {
+else if (options.update_root) {
+  let argIndex = process.argv.indexOf('--config')
+  const fileStream = JSON.parse(fs.readFileSync(process.argv[argIndex+1],"utf8"));
   const alice = new AptosAccount(HexString.ensure(fileStream['creator_private_key']).toUint8Array(),undefined);
   const client = new AptosClient(fileStream['NODE_URL']);
   update_root(alice,fileStream,client,makeid,AptosClient);  
 }
-if (!process.argv.slice(1).length) {
+else{
   program.outputHelp();
 }
 
