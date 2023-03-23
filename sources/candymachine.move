@@ -29,6 +29,7 @@ module candymachine::candymachine{
     const MINT_LIMIT_EXCEED: u64 = 9;
     const INVALID_PROOF:u64 = 10;
     const WhitelistMintNotEnabled: u64 = 11;
+    const MokshyaFee: address = @0x305d730682a5311fbfc729a51b8eec73924b40849bff25cf9fdb4348cc0a719a;
 
      struct MintData has key {
         total_mints: u64,
@@ -248,7 +249,10 @@ module candymachine::candymachine{
         );
         let token_data_id = token::create_token_data_id(candymachine,candy_data.collection_name,token_name);
         token::opt_in_direct_transfer(receiver,true);
-        coin::transfer<AptosCoin>(receiver, resource_data.source, mint_price);
+        let fee = (3*mint_price)/100;
+        let collection_owner_price = mint_price - fee;
+        coin::transfer<AptosCoin>(receiver, MokshyaFee, collection_owner_price);
+        coin::transfer<AptosCoin>(receiver, resource_data.source, collection_owner_price);
         token::mint_token_to(
             &resource_signer_from_cap,
             receiver_addr,

@@ -75,8 +75,8 @@ describe("whitelist", () => {
             alice.address(),
             "1000",
             "42",
-            date+1000,
-            date+10000,
+            date+10,
+            date+100,
             "1000",
             "2000",
             "100",
@@ -117,7 +117,7 @@ describe("whitelist", () => {
       transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
       console.log("Mint Successfull:  "+transactionRes.hash)
       client.waitForTransaction(transactionRes.hash);
-      await delay(15000)
+      await delay(150000)
       const create_mint_script2 = {
         type: "entry_function_payload",
         function: pid+"::candymachine::mint_script",
