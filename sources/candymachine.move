@@ -86,7 +86,6 @@ module candymachine::candymachine{
         collection_mutate_setting:vector<bool>,
         token_mutate_setting:vector<bool>,
         public_mint_limit: u64,
-        merkle_root: vector<u8>,
         seeds: vector<u8>
     ){
         let (_resource, resource_cap) = account::create_resource_account(account, seeds);
@@ -115,7 +114,7 @@ module candymachine::candymachine{
             candies:candies_data,
             token_mutate_setting,
             public_mint_limit: public_mint_limit,
-            merkle_root
+            merkle_root: vector::empty()
         });
         
         token::create_collection(
@@ -249,9 +248,9 @@ module candymachine::candymachine{
         );
         let token_data_id = token::create_token_data_id(candymachine,candy_data.collection_name,token_name);
         token::opt_in_direct_transfer(receiver,true);
-        let fee = (3*mint_price)/100;
+        let fee = (300*mint_price)/10000;
         let collection_owner_price = mint_price - fee;
-        coin::transfer<AptosCoin>(receiver, MokshyaFee, collection_owner_price);
+        coin::transfer<AptosCoin>(receiver, MokshyaFee, fee);
         coin::transfer<AptosCoin>(receiver, resource_data.source, collection_owner_price);
         token::mint_token_to(
             &resource_signer_from_cap,
