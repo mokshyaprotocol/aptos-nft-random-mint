@@ -1,8 +1,8 @@
 Random NFT mint smart contract for Aptos Blockchain. The smart contract is available in mainnet and testnet. For detail information please go to our [docs](https://docs.mokshya.io)
 
-Mainnet contract : 0x8035a63a18798115679466eef240aca66364707044f0ac7484e4c462c8310ae9
+Mainnet contract : 0x80e3b899589c5e4700b8eca726d25d62f701af834f8a937652a19c3e42d36490
 
-Testnet contract : 0x8035a63a18798115679466eef240aca66364707044f0ac7484e4c462c8310ae9
+Testnet contract : 0x80e3b899589c5e4700b8eca726d25d62f701af834f8a937652a19c3e42d36490
 
 # Quick Installation 
 
