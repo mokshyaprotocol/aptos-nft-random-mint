@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@saberhq/token-utils": "^1.14.11",
-    "aptos": "^1.3.16",
+    "aptos": "^1.7.2",
     "commander": "^9.4.1",
     "fs": "^0.0.1-security",
     "jsbi": "^4.3.0",

@@ -195,24 +195,29 @@ module candymachine::candymachine{
         let new =  vector::empty();
         while (required_position < random_index)
         {
-        let bitvector=*vector::borrow_mut(&mut candy_data.candies, bucket);
-        let i =0;
-        while (i < bit_vector::length(&bitvector)) {
-            if (!bit_vector::is_index_set(&bitvector, i))
-            {
-            required_position=required_position+1;
+            let bitvector=*vector::borrow_mut(&mut candy_data.candies, bucket);
+            let i =0;
+            let j = false;
+            while (i < bit_vector::length(&bitvector)) {
+                if (!bit_vector::is_index_set(&bitvector, i))
+                {
+                required_position=required_position+1;
+                };
+                if (required_position == random_index)
+                {
+                    bit_vector::set(&mut bitvector,i);
+                    // vector::push_back(&mut new, bitvector);
+                    j = true;
+                    break
+                };
+                pos=pos+1;
+                i= i + 1;
             };
-            if (required_position == random_index)
-            {
-                bit_vector::set(&mut bitvector,i);
-                vector::push_back(&mut new, bitvector);
+            if(j==true){
                 break
             };
-            pos=pos+1;
-            i= i + 1;
-        };
-        vector::push_back(&mut new, bitvector);
-        bucket=bucket+1
+            // vector::push_back(&mut new, bitvector);
+            bucket=bucket+1
         };
         while (bucket < vector::length(&candy_data.candies))
         {
@@ -221,7 +226,7 @@ module candymachine::candymachine{
             bucket=bucket+1;
         };
         let mint_position = pos;
-        candy_data.candies = new;
+        // candy_data.candies = new;
         let baseuri = candy_data.baseuri;
         let properties = vector::empty<String>();
         string::append(&mut baseuri,num_str(mint_position));

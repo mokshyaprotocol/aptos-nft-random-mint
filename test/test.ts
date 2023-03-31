@@ -28,7 +28,7 @@ const to_buf = (account:Uint8Array,amount:number): Buffer=>{
 console.log("Alice Address: "+alice.address())
 console.log("Bob Address: "+bob.address())
 
-const pid ="0x80e3b899589c5e4700b8eca726d25d62f701af834f8a937652a19c3e42d36490"
+const pid ="0xe94aca46d6cf84e2c248b6e4b75a375af5b489064aa6f6f85c737fee4ccc3ff4"
 
 function makeid(length) {
   var result           = '';
@@ -83,7 +83,6 @@ describe("whitelist", () => {
             [false,false,false],
             [false,false,false,false,false],
             0,
-            tree.getRoot(),
             ""+makeid(5),
         ]
         };
@@ -101,6 +100,21 @@ describe("whitelist", () => {
          proof.forEach((p) => {
            proofs.push(p.data);
          });
+         const create_mint_script3 = {
+          type: "entry_function_payload",
+          function: pid+"::candymachine::set_root",
+          type_arguments: [],
+          arguments: [
+            getresourceAccount['changes'][2]['address'],
+            tree.getRoot()
+          ],
+        };
+      txnRequest = await client.generateTransaction(alice.address(), create_mint_script3);
+      bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
+      transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
+      console.log("merkle root Successfull:  "+transactionRes.hash)
+      client.waitForTransaction(transactionRes.hash);
+      await delay(10000)
 
         const create_mint_script1 = {
           type: "entry_function_payload",
@@ -118,6 +132,7 @@ describe("whitelist", () => {
       console.log("Mint Successfull:  "+transactionRes.hash)
       client.waitForTransaction(transactionRes.hash);
       await delay(150000)
+      
       const create_mint_script2 = {
         type: "entry_function_payload",
         function: pid+"::candymachine::mint_script",
