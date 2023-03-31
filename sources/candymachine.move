@@ -192,25 +192,35 @@ module candymachine::candymachine{
         let required_position=0; // the number of unset 
         let bucket =0; // number of buckets
         let pos=0; // the mint number 
-        let new =  vector::empty();
+        let new =  vector<BitVector>[];
         while (required_position < random_index)
         {
         let bitvector=*vector::borrow_mut(&mut candy_data.candies, bucket);
         let i =0;
-        while (i < bit_vector::length(&bitvector)) {
-            if (!bit_vector::is_index_set(&bitvector, i))
+        let flag= false;
+        //nft 100
+        //random index 10 
+        //bucket =1
+
+        while (i < bit_vector::length(&bitvector)) 
             {
-            required_position=required_position+1;
+                if (!bit_vector::is_index_set(&bitvector, i))
+                {
+                required_position=required_position+1;
+                };
+                if (required_position == random_index)
+                {
+                    bit_vector::set(&mut bitvector,i);
+                    flag=true;
+                    break
+                };
+                pos=pos+1;
+                i= i + 1;
             };
-            if (required_position == random_index)
-            {
-                bit_vector::set(&mut bitvector,i);
-                vector::push_back(&mut new, bitvector);
-                break
-            };
-            pos=pos+1;
-            i= i + 1;
-        };
+        // if (flag==true)
+        // {
+        //     break
+        // };
         vector::push_back(&mut new, bitvector);
         bucket=bucket+1
         };
@@ -221,6 +231,7 @@ module candymachine::candymachine{
             bucket=bucket+1;
         };
         let mint_position = pos;
+        candy_data.candies = vector<BitVector>[];
         candy_data.candies = new;
         let baseuri = candy_data.baseuri;
         let properties = vector::empty<String>();
