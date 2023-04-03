@@ -197,10 +197,6 @@ module candymachine::candymachine{
         {
         let bitvector=*vector::borrow_mut(&mut candy_data.candies, bucket);
         let i =0;
-        let flag= false;
-        //nft 100
-        //random index 10 
-        //bucket =1
 
         while (i < bit_vector::length(&bitvector)) 
             {
@@ -211,16 +207,11 @@ module candymachine::candymachine{
                 if (required_position == random_index)
                 {
                     bit_vector::set(&mut bitvector,i);
-                    flag=true;
                     break
                 };
                 pos=pos+1;
                 i= i + 1;
             };
-        // if (flag==true)
-        // {
-        //     break
-        // };
         vector::push_back(&mut new, bitvector);
         bucket=bucket+1
         };
@@ -403,8 +394,10 @@ module candymachine::candymachine{
 
     fun create_bit_mask(nfts: u64): vector<BitVector>
     {
-        let full_buckets = nfts/1024; 
-        let remaining =nfts-full_buckets*1024; 
+        // 1023 elements in one bucket
+        let full_buckets = nfts/1023; 
+        // remaining nfts
+        let remaining =nfts-full_buckets*1023; 
         let v1 = vector::empty();
         while (full_buckets>0)
         {

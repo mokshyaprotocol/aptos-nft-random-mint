@@ -77,9 +77,9 @@ describe("whitelist", () => {
             "42",
             date+10,
             date+100,
-            "1000",
+            "1",
+            "1",
             "2000",
-            "100",
             [false,false,false],
             [false,false,false,false,false],
             0,
@@ -90,9 +90,8 @@ describe("whitelist", () => {
         let bcsTxn = AptosClient.generateBCSTransaction(alice, txnRequest);
         let transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
         console.log("Candy Machine created: "+transactionRes.hash)
-
         let getresourceAccount = await client.waitForTransactionWithResult(transactionRes.hash);
-      await delay(15000)
+        await delay(15000)
         const proofs = [];
         const proof = tree.getProof((keccak256(whitelistAddresses[(whitelistAddresses.length)-1])));
         let not_whitelist= keccak256(whitelistAddresses[1]);
