@@ -53,7 +53,8 @@ module candymachine::candymachine{
         token_mutate_setting:vector<bool>,
         candies:BitVector,
         public_mint_limit: u64,
-        merkle_root: vector<u8>
+        merkle_root: vector<u8>,
+        random:bool, // if set to true, mint will be random // if false sequential 
     }
     struct Whitelist has key {
         minters: BucketTable<address,u64>,
@@ -87,7 +88,8 @@ module candymachine::candymachine{
         collection_mutate_setting:vector<bool>,
         token_mutate_setting:vector<bool>,
         public_mint_limit: u64,
-        seeds: vector<u8>
+        seeds: vector<u8>,
+        random:bool,
     ){
         let (_resource, resource_cap) = account::create_resource_account(account, seeds);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_cap);
@@ -115,7 +117,8 @@ module candymachine::candymachine{
             candies:bit_vector::new(total_supply),
             token_mutate_setting,
             public_mint_limit: public_mint_limit,
-            merkle_root: vector::empty()
+            merkle_root: vector::empty(),
+            random:random
         });
         
         token::create_collection(
@@ -192,7 +195,7 @@ module candymachine::candymachine{
         let random_index = pseudo_random(receiver_addr,remaining);
         let required_position=0; // the number of unset 
         let pos=0; // the mint number 
-        while (required_position < random_index)
+        while (required_position < random_index && candy_data.random)
         {
         if (!bit_vector::is_index_set(&candy_data.candies, pos))
             {
@@ -206,6 +209,10 @@ module candymachine::candymachine{
             pos=pos+1;
         };
         bit_vector::set(&mut candy_data.candies,pos);
+        if (!candy_data.random)
+        {
+            pos = candy_data.minted+1;
+        }
         let mint_position = pos;
         let baseuri = candy_data.baseuri;
         let properties = vector::empty<String>();
