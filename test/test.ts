@@ -28,7 +28,7 @@ const to_buf = (account:Uint8Array,amount:number): Buffer=>{
 console.log("Alice Address: "+alice.address())
 console.log("Bob Address: "+bob.address())
 
-const pid ="0xe94aca46d6cf84e2c248b6e4b75a375af5b489064aa6f6f85c737fee4ccc3ff4"
+const pid ="0x5a3cde1cc1f3d22d88422f0032eeea2a6395d9ff0b4a3c808de87a8b0aed7067"
 
 function makeid(length) {
   var result           = '';
@@ -50,7 +50,7 @@ describe("whitelist", () => {
   for(let i=0;i<200;i++){
     whitelistAddresses.push(to_buf(new AptosAccount().address().toUint8Array(),1))
   }
-  whitelistAddresses.push(to_buf(alice.address().toUint8Array(),1))
+  whitelistAddresses.push(to_buf(alice.address().toUint8Array(),10))
   let leafNodes = whitelistAddresses.map((address) => keccak256(address));
   let rt;
   if (leafNodes[0] <= leafNodes[1])
@@ -84,6 +84,7 @@ describe("whitelist", () => {
             [false,false,false,false,false],
             0,
             ""+makeid(5),
+            true /// true for random mint // false for sequential mint 
         ]
         };
         let txnRequest = await client.generateTransaction(alice.address(), create_candy_machine);
@@ -114,7 +115,6 @@ describe("whitelist", () => {
       console.log("merkle root Successfull:  "+transactionRes.hash)
       client.waitForTransaction(transactionRes.hash);
       await delay(10000)
-
         const create_mint_script1 = {
           type: "entry_function_payload",
           function: pid+"::candymachine::mint_from_merkle",
@@ -122,7 +122,7 @@ describe("whitelist", () => {
           arguments: [
             getresourceAccount['changes'][2]['address'],
             proofs,
-            BigInt(1)
+            BigInt(10)
           ],
         };
       txnRequest = await client.generateTransaction(alice.address(), create_mint_script1);

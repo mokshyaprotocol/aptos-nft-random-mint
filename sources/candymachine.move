@@ -211,8 +211,8 @@ module candymachine::candymachine{
         bit_vector::set(&mut candy_data.candies,pos);
         if (!candy_data.random)
         {
-            pos = candy_data.minted+1;
-        }
+            pos = candy_data.minted;
+        };
         let mint_position = pos;
         let baseuri = candy_data.baseuri;
         let properties = vector::empty<String>();
