@@ -13,7 +13,7 @@ module candymachine::candymachine{
     use aptos_framework::coin::{Self};
     use aptos_framework::account;
     use aptos_framework::timestamp;
-    use aptos_token::token::{Self,TokenDataId,TokenId};
+    use aptos_token::token::{Self,TokenDataId,TokenId,Royalty};
     use candymachine::bucket_table::{Self, BucketTable};
     use candymachine::merkle_proof::{Self};
 
@@ -359,6 +359,18 @@ module candymachine::candymachine{
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
         token::mutate_tokendata_property(&resource_signer_from_cap,token_data_id,keys,values,types);  
+    }
+    public fun mutate_token_royalty(
+        account: &signer,
+        token_data_id: TokenDataId,
+        royalty:Royalty,
+    )acquires ResourceInfo
+    {
+        let account_addr = signer::address_of(account);
+        let resource_data = borrow_global<ResourceInfo>(candymachine);
+        assert!(resource_data.source == account_addr, INVALID_SIGNER);
+        let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
+        token::mutate_tokendata_royalty(&resource_signer_from_cap,token_data_id,royalty);
     }
 
     fun num_str(num: u64): String
