@@ -13,7 +13,7 @@ module candymachine::candymachine{
     use aptos_framework::coin::{Self};
     use aptos_framework::account;
     use aptos_framework::timestamp;
-    use aptos_token::token::{Self,TokenDataId,TokenId};
+    use aptos_token::token::{Self};
     use candymachine::bucket_table::{Self, BucketTable};
     use candymachine::merkle_proof::{Self};
 
@@ -319,45 +319,52 @@ module candymachine::candymachine{
     public fun mutate_one_token(
         account: &signer,
         token_owner: address,
-        token_id: TokenId,
+        token_name:String,
+        property_version:u64,
         keys: vector<String>,
         values: vector<vector<u8>>,
         types: vector<String>,
         candymachine: address,
-    )acquires ResourceInfo
+    )acquires ResourceInfo,CandyMachine
     {
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
+        let candy_data = borrow_global<CandyMachine>(candymachine);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
+        let token_id = token::create_token_id_raw(candymachine,candy_data.collection_name,token_name,property_version);
         token::mutate_one_token(&resource_signer_from_cap,token_owner,token_id,keys,values,types);
     }
     public fun mutate_tokendata_uri(
         account: &signer,
-        token_data_id: TokenDataId,
+        token_name: String,
         uri: String,
         candymachine: address,
-    )acquires ResourceInfo
+    )acquires ResourceInfo,CandyMachine
     {
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
+        let candy_data = borrow_global<CandyMachine>(candymachine);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
+        let token_data_id = token::create_token_data_id(candymachine,candy_data.collection_name,token_name);
         token::mutate_tokendata_uri(&resource_signer_from_cap,token_data_id,uri);
     }
     public fun mutate_tokendata_property(
         account: &signer,
-        token_data_id: TokenDataId,
+        token_name:String,
         keys: vector<String>,
         values: vector<vector<u8>>,
         types: vector<String>,
         candymachine: address
-    )acquires ResourceInfo
+    )acquires ResourceInfo,CandyMachine
     {
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
+        let candy_data = borrow_global<CandyMachine>(candymachine);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
+        let token_data_id = token::create_token_data_id(candymachine,candy_data.collection_name,token_name);
         token::mutate_tokendata_property(&resource_signer_from_cap,token_data_id,keys,values,types);  
     }
     public fun mutate_token_royalty(
@@ -365,15 +372,15 @@ module candymachine::candymachine{
         token_name:String,
         royalty_points_numerator:u64,
         royalty_points_denominator:u64,
-        candy_machine: address
+        candymachine: address
     )acquires ResourceInfo,CandyMachine
     {
         let account_addr = signer::address_of(account);
-        let resource_data = borrow_global<ResourceInfo>(candy_machine);
+        let resource_data = borrow_global<ResourceInfo>(candymachine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
-        let candy_data = borrow_global<CandyMachine>(candy_machine);
+        let candy_data = borrow_global<CandyMachine>(candymachine);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
-        let token_data_id = token::create_token_data_id(candy_machine,candy_data.collection_name,token_name);
+        let token_data_id = token::create_token_data_id(candymachine,candy_data.collection_name,token_name);
         let royalty = token::create_royalty(royalty_points_numerator, royalty_points_denominator, candy_data.royalty_payee_address);
         token::mutate_tokendata_royalty(&resource_signer_from_cap,token_data_id,royalty);
     }
