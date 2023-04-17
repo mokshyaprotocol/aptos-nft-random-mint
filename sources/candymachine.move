@@ -364,10 +364,11 @@ module candymachine::candymachine{
         account: &signer,
         token_data_id: TokenDataId,
         royalty:Royalty,
+        candy_machine: address
     )acquires ResourceInfo
     {
         let account_addr = signer::address_of(account);
-        let resource_data = borrow_global<ResourceInfo>(candymachine);
+        let resource_data = borrow_global<ResourceInfo>(candy_machine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
         token::mutate_tokendata_royalty(&resource_signer_from_cap,token_data_id,royalty);
