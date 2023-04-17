@@ -13,7 +13,7 @@ module candymachine::candymachine{
     use aptos_framework::coin::{Self};
     use aptos_framework::account;
     use aptos_framework::timestamp;
-    use aptos_token::token::{Self,TokenDataId,TokenId,Royalty};
+    use aptos_token::token::{Self,TokenDataId,TokenId};
     use candymachine::bucket_table::{Self, BucketTable};
     use candymachine::merkle_proof::{Self};
 
@@ -362,15 +362,19 @@ module candymachine::candymachine{
     }
     public fun mutate_token_royalty(
         account: &signer,
-        token_data_id: TokenDataId,
-        royalty:Royalty,
+        token_name:String,
+        royalty_points_numerator:u64,
+        royalty_points_denominator:u64,
         candy_machine: address
-    )acquires ResourceInfo
+    )acquires ResourceInfo,CandyMachine
     {
         let account_addr = signer::address_of(account);
         let resource_data = borrow_global<ResourceInfo>(candy_machine);
         assert!(resource_data.source == account_addr, INVALID_SIGNER);
+        let candy_data = borrow_global<CandyMachine>(candy_machine);
         let resource_signer_from_cap = account::create_signer_with_capability(&resource_data.resource_cap);
+        let token_data_id = token::create_token_data_id(candy_machine,candy_data.collection_name,token_name);
+        let royalty = token::create_royalty(royalty_points_numerator, royalty_points_denominator, candy_data.royalty_payee_address);
         token::mutate_tokendata_royalty(&resource_signer_from_cap,token_data_id,royalty);
     }
 
