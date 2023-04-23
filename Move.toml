@@ -8,7 +8,7 @@ Std = "0x1"
 aptos_std = "0x1"
 
 [dependencies]
-AptosFramework = { local = "../../aptos-core/aptos-move/framework/aptos-framework"}
-AptosToken = { local = "../../aptos-core/aptos-move/framework/aptos-token" }
-AptosStdlib = { local = "../../aptos-core/aptos-move/framework/aptos-stdlib" }
-DataStructure = { local = "../../aptos-core/aptos-move/move-examples/data_structures" }
+AptosFramework = { local = "../../../../aptos-core/aptos-move/framework/aptos-framework"}
+AptosToken = { local = "../../../../aptos-core/aptos-move/framework/aptos-token" }
+AptosStdlib = { local = "../../../../aptos-core/aptos-move/framework/aptos-stdlib" }
+DataStructure = { local = "../../../../aptos-core/aptos-move/move-examples/data_structures" }

@@ -1,0 +1,17 @@
+[package]
+name = 'script'
+version = '1.0.0'
+# [dependencies.AptosFramework]
+# git = 'https://github.com/aptos-labs/aptos-core.git'
+# rev = 'main'
+# subdir = 'aptos-move/framework/aptos-framework'
+[dependencies.candymachine]
+git = 'https://github.com/mokshyaprotocol/aptos-nft-random-mint'
+rev = 'master'
+subdir = ''
+[addresses]
+candymachine = "0x25d440284ca6c13afadb0e83ff1bccacbaa75175551111d8b7cb5d2854e708f0"
+std = "0x1"
+aptos_std="0x1"
+
+
