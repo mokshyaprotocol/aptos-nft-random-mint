@@ -182,21 +182,4 @@ describe("whitelist", () => {
         console.log("Resume mint: "+transactionRes.hash)
         await client.waitForTransactionWithResult(transactionRes.hash);
       })
-  it("script",async ()=>{
-    const sendToSelfBytecode = 'a11ceb0b060000000501000203020505070c071319082c200000000103020003060c030501030002060c050c63616e64796d616368696e650b6d696e745f73637269707425d440284ca6c13afadb0e83ff1bccacbaa75175551111d8b7cb5d2854e708f0000001120600000000000000000c030a030a0123040f05070a000a0211000b03060100000000000000160c0305020b000102';
-
-function buildSendToSelfScriptPayload() {
-  const bytecode = new HexString(sendToSelfBytecode).toUint8Array();
-  const args = [
-    // BCS.bcsToBytes(AccountAddress.fromHex("0xe94aca46d6cf84e2c248b6e4b75a375af5b489064aa6f6f85c737fee4ccc3ff4")),
-    // new TxnBuilderTypes.AccountAddress(("")),
-    // TxnBuilderTypes.TransactionArgumentU8Vector("0xe94aca46d6cf84e2c248b6e4b75a375af5b489064aa6f6f85c737fee4ccc3ff4"),
-    new TxnBuilderTypes.TransactionArgumentAddress(AccountAddress.fromHex("0xe94aca46d6cf84e2c248b6e4b75a375af5b489064aa6f6f85c737fee4ccc3ff4")),
-  ];
-  const script = new TxnBuilderTypes.Script(bytecode, [], args);
-  return new TxnBuilderTypes.TransactionPayloadScript(script);
-}
-const payload = buildSendToSelfScriptPayload();
-const pendingTransaction = await client.submitTransaction(payload);
-  })
-})
+    })
