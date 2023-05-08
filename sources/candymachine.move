@@ -183,7 +183,7 @@ module candymachine::candymachine{
             initialize_and_create_public_minter(&resource_signer_from_cap,candy_data,receiver_addr,candymachine);
             mint_data.total_apt=mint_data.total_apt+candy_data.public_sale_mint_price;
         };
-        assert!(candy_data.paused == false, EPAUSED);
+        assert!(candy_data.paused = false, EPAUSED);
         assert!(candy_data.minted != candy_data.total_supply, ESOLD_OUT);
         let remaining = candy_data.total_supply - candy_data.minted;
         let random_index = pseudo_random(receiver_addr,remaining);
@@ -301,7 +301,7 @@ module candymachine::candymachine{
                 candy_data.royalty_points_numerator = royalty_points_numerator
             };
         };
-        if (public_sale_mint_price>0){
+        if (presale_mint_price>0){
             candy_data.presale_mint_price = presale_mint_price
         };
          if (public_sale_mint_price>0){
@@ -410,10 +410,6 @@ module candymachine::candymachine{
         assert!(remaining>0,999);
 
         let random = from_bcs::to_u64(data) % remaining + 1;
-        if (random == 0 )
-        {
-            random = 1;
-        };
         random
     }
 
