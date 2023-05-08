@@ -6,6 +6,7 @@ module candymachine::candymachine{
     use aptos_std::from_bcs;
     use std::string::{Self, String};
     use std::vector;
+    use aptos_framework::event::{Self, EventHandle};
     use aptos_framework::aptos_coin::AptosCoin;
     use candymachine::bit_vector::{Self,BitVector};
     use aptos_framework::coin::{Self};
@@ -51,7 +52,8 @@ module candymachine::candymachine{
         token_mutate_setting:vector<bool>,
         candies:BitVector,
         public_mint_limit: u64,
-        merkle_root: vector<u8>
+        merkle_root: vector<u8>,
+        update_event: EventHandle<UpdateCandyEvent>,
     }
     struct Whitelist has key {
         minters: BucketTable<address,u64>,
@@ -62,6 +64,14 @@ module candymachine::candymachine{
     struct ResourceInfo has key {
             source: address,
             resource_cap: account::SignerCapability
+    }
+    struct UpdateCandyEvent has drop, store {
+        presale_mint_price: u64,
+        presale_mint_time: u64,
+        public_sale_mint_price: u64,
+        public_sale_mint_time: u64,
+        royalty_points_denominator: u64,
+        royalty_points_numerator: u64,
     }
     fun init_module(account: &signer) {
         move_to(account, MintData {
@@ -112,7 +122,8 @@ module candymachine::candymachine{
             candies:bit_vector::new(total_supply),
             token_mutate_setting,
             public_mint_limit: public_mint_limit,
-            merkle_root: vector::empty()
+            merkle_root: vector::empty(),
+            update_event: account::new_event_handle<UpdateCandyEvent>(&resource_signer_from_cap),
         });
         
         token::create_collection(
@@ -183,7 +194,7 @@ module candymachine::candymachine{
             initialize_and_create_public_minter(&resource_signer_from_cap,candy_data,receiver_addr,candymachine);
             mint_data.total_apt=mint_data.total_apt+candy_data.public_sale_mint_price;
         };
-        assert!(candy_data.paused = false, EPAUSED);
+        assert!(candy_data.paused == false, EPAUSED);
         assert!(candy_data.minted != candy_data.total_supply, ESOLD_OUT);
         let remaining = candy_data.total_supply - candy_data.minted;
         let random_index = pseudo_random(receiver_addr,remaining);
@@ -304,9 +315,18 @@ module candymachine::candymachine{
         if (presale_mint_price>0){
             candy_data.presale_mint_price = presale_mint_price
         };
-         if (public_sale_mint_price>0){
+        if (public_sale_mint_price>0){
             candy_data.public_sale_mint_price = public_sale_mint_price
         };
+        event::emit_event(&mut candy_data.update_event,UpdateCandyEvent {
+                presale_mint_price: candy_data.presale_mint_price,
+                presale_mint_time: candy_data.presale_mint_time,
+                public_sale_mint_price: candy_data.public_sale_mint_price,
+                public_sale_mint_time: candy_data.public_sale_mint_time,
+                royalty_points_denominator: candy_data.royalty_points_denominator,
+                royalty_points_numerator: candy_data.royalty_points_numerator,
+            }
+        );
     }
     public fun mutate_one_token(
         account: &signer,
