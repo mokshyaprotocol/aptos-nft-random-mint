@@ -160,11 +160,11 @@ module candymachine::candymachine{
         let leafvec = bcs::to_bytes(&receiver_addr);
         vector::append(&mut leafvec,bcs::to_bytes(&mint_limit));
         let is_whitelist_mint = candy_data.presale_mint_time < now && now < candy_data.public_sale_mint_time;
+        assert!(is_whitelist_mint, WhitelistMintNotEnabled);
         assert!(merkle_proof::verify(proof,candy_data.merkle_root,aptos_hash::keccak256(leafvec)),INVALID_PROOF);
         if(!exists<Whitelist>(candymachine)){
             initialize_whitelist(resource_signer_from_cap)
         };
-        assert!(is_whitelist_mint, WhitelistMintNotEnabled);
         // No need to check limit if mint limit = 0, this means the minter can mint unlimited amount of tokens
         if(mint_limit != 0){
             let whitelist_data = borrow_global_mut<Whitelist>(candymachine);
@@ -194,7 +194,7 @@ module candymachine::candymachine{
             initialize_and_create_public_minter(&resource_signer_from_cap,candy_data,receiver_addr,candymachine);
             mint_data.total_apt=mint_data.total_apt+candy_data.public_sale_mint_price;
         };
-        assert!(candy_data.paused == false, EPAUSED);
+        assert!(!candy_data.paused, EPAUSED);
         assert!(candy_data.minted != candy_data.total_supply, ESOLD_OUT);
         let remaining = candy_data.total_supply - candy_data.minted;
         let random_index = pseudo_random(receiver_addr,remaining);
